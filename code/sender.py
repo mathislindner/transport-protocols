@@ -173,6 +173,11 @@ class GBNSender(Automaton):
 
             ack = pkt.getlayer(GBN).num
 
+            del self.buffer[self.current]
+            
+
+
+
             ################################################################
             # TODO:                                                        #
             # remove all the acknowledged sequence numbers from the buffer #
