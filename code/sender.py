@@ -174,7 +174,7 @@ class GBNSender(Automaton):
             ack = pkt.getlayer(GBN).num
 
             del self.buffer[self.current]
-            
+
 
 
 
@@ -202,6 +202,10 @@ class GBNSender(Automaton):
     @ATMT.state()
     def RETRANSMIT(self):
         """State for retransmitting packets."""
+
+        header_GBN = GBN(type=0, hlen=48, num=self.current, win=self.win)
+        send(IP(src=sender, dst=receiver) / header_GBN / payload)
+
 
         ##############################################
         # TODO:                                      #
