@@ -124,6 +124,11 @@ class GBNSender(Automaton):
                 self.buffer[self.current] = payload
                 log.debug("Current buffer size: %s", len(self.buffer))
 
+
+                header_GBN = GBN(type = 0, hlen = 48, num = self.current, win = self.win)
+                send(IP(src=sender, dst=receiver)/header_GBN/payload)
+
+
                 ###############################################################
                 # TODO:                                                       #
                 # create a GBN header with the correct header field values    #
