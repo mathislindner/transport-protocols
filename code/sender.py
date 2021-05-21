@@ -122,7 +122,7 @@ class GBNSender(Automaton):
 
                 # add the current segment to the buffer
                 self.buffer[self.current] = payload
-                log.debug("Current buffer size: %s", len(self.buffer))
+                log.debug("Current buffer size test: %s", len(self.buffer))
 
 
                 header_GBN = GBN(type = 0, hlen = 48, num = self.current, win = self.win)
