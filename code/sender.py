@@ -129,6 +129,9 @@ class GBNSender(Automaton):
                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
 
+                print("hello")
+
+
                 ###############################################################
                 # TODO:                                                       #
                 # create a GBN header with the correct header field values    #
