@@ -126,7 +126,7 @@ class GBNSender(Automaton):
 
 
                 header_GBN = GBN(type = 0, hlen = 48, num = self.current, win = self.win)
-                send(IP(src=sender, dst=receiver)/header_GBN/payload)
+                send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
 
 
                 ###############################################################
