@@ -124,21 +124,16 @@ class GBNSender(Automaton):
                 self.buffer[self.current] = payload
                 log.debug("Current buffer size test: %s", len(self.buffer))
 
-
-                header_GBN = GBN(type = 0, hlen = 48, num = self.current, win = self.win)
-                send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
-
-                log.debug("hello %s", self.win)
-
-
                 ###############################################################
                 # TODO:                                                       #
                 # create a GBN header with the correct header field values    #
                 # send a packet to the receiver containing the created header #
                 # and the corresponding payload                               #
                 ###############################################################
+                header_GBN = GBN(type = 0, hlen = 48, num = self.current, win = self.win)
+                send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
-
+                log.debug("hello %s", self.win)
 
 
                 # sequence number of next packet
@@ -175,15 +170,6 @@ class GBNSender(Automaton):
 
             ack = pkt.getlayer(GBN).num
 
-            while ack != self.current:
-                del self.buffer[ack]
-                if ack == 0:
-                    ack = 2**self.n_bits -1
-                else:
-                    ack = ack-1
-
-
-
             ################################################################
             # TODO:                                                        #
             # remove all the acknowledged sequence numbers from the buffer #
@@ -191,8 +177,12 @@ class GBNSender(Automaton):
             ################################################################
 
 
-
-
+            while ack != self.current:
+                del self.buffer[ack]
+                if ack == 0:
+                    ack = 2**self.n_bits -1
+                else:
+                    ack = ack-1
 
 
 
@@ -208,20 +198,23 @@ class GBNSender(Automaton):
     @ATMT.state()
     def RETRANSMIT(self):
         """State for retransmitting packets."""
-
-        k = 0
-        for i in self.buffer:
-            header_GBN = GBN(type=0, hlen=48, num=self.current - len(self.buffer) + k, win=self.win)
-            send(IP(src=sender, dst=receiver) / header_GBN / self.buffer[i])
-            k = k+1
-
         ##############################################
         # TODO:                                      #
         # retransmit all the unacknowledged packets  #
         # (all the packets currently in self.buffer) #
         ##############################################
 
-
+        #commented it out bc it raised an error and rewrote it below
+        """        k = 0
+        for i in self.buffer:
+            header_GBN = GBN(type=0, hlen=48, num=self.current - len(self.buffer) + k, win=self.win)
+            send(IP(src = sender, dst = receiver) / header_GBN / self.buffer[i])
+            k = k+1
+        """
+        # what's k for?
+        for k, packet in enumerate(self.buffer):
+            header_GBN = GBN(type=0, hlen=48, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
+            send(IP(src = self.sender, dst = self.receiver) / header_GBN / packet)
 
 
 
