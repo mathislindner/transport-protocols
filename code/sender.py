@@ -173,7 +173,6 @@ class GBNSender(Automaton):
             # remove all the acknowledged sequence numbers from the buffer #
             # make sure that you can handle a sequence number overflow     #
             ################################################################
-    #useless comment
 
             while ack != self.current:
                 del self.buffer[ack]
