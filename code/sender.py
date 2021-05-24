@@ -203,16 +203,9 @@ class GBNSender(Automaton):
         # (all the packets currently in self.buffer) #
         ##############################################
 
-        #commented it out bc it raised an error and rewrote it below
-        """        k = 0
-        for i in self.buffer:
-            header_GBN = GBN(type=0, hlen=48, num=self.current - len(self.buffer) + k, win=self.win)
-            send(IP(src = sender, dst = receiver) / header_GBN / self.buffer[i])
-            k = k+1
-        """
-        # what's k for?
         for k in self.buffer:
-            header_GBN = GBN(type=0,len=len(payload), hlen=6, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
+            payload_len = len(self.buffer[k])
+            header_GBN = GBN(type=0,len = payload_len, hlen=6, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
             send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
 
 
