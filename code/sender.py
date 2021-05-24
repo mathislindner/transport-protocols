@@ -124,15 +124,6 @@ class GBNSender(Automaton):
                 self.buffer[self.current] = payload
                 log.debug("Current buffer size test: %s", len(self.buffer))
 
-
-
-                header_GBN = GBN(type = 0,len=64, hlen = 6, num = self.current, win = self.win)
-                send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
-
-
-
-
-
                 ###############################################################
                 # TODO:                                                       #
                 # create a GBN header with the correct header field values    #
@@ -177,7 +168,12 @@ class GBNSender(Automaton):
 
             ack = pkt.getlayer(GBN).num
 
-
+            ################################################################
+            # TODO:                                                        #
+            # remove all the acknowledged sequence numbers from the buffer #
+            # make sure that you can handle a sequence number overflow     #
+            ################################################################
+            
             while self.unack != ack:
                 self.buffer[self.unack].remove()
                 if ack == 0:
@@ -186,20 +182,6 @@ class GBNSender(Automaton):
                     self.unack = self.unack+1
 
 
-
-
-            ################################################################
-            # TODO:                                                        #
-            # remove all the acknowledged sequence numbers from the buffer #
-            # make sure that you can handle a sequence number overflow     #
-            ################################################################
-
-            while ack != self.current:
-                del self.buffer[ack]
-                if ack == 0:
-                    ack = 2**self.n_bits -1
-                else:
-                    ack = ack-1
 
 
 
