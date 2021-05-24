@@ -182,9 +182,6 @@ class GBNSender(Automaton):
                     self.unack = self.unack+1
 
 
-
-
-
         # back to SEND state
         raise self.SEND()
 
@@ -214,7 +211,7 @@ class GBNSender(Automaton):
         # what's k for?
         for k, packet in enumerate(self.buffer):
             header_GBN = GBN(type=0,len=64, hlen=6, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
-            send(IP(src = self.sender, dst = self.receiver) / header_GBN / packet)
+            send(IP(src = self.sender, dst = self.receiver)/header_GBN/packet)
 
 
 
