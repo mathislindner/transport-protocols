@@ -209,10 +209,9 @@ class GBNSender(Automaton):
             k = k+1
         """
         # what's k for?
-        for k, packet in enumerate(self.buffer):
+        for k in self.buffer:
             header_GBN = GBN(type=0,len=64, hlen=6, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
-            send(IP(src = self.sender, dst = self.receiver)/header_GBN/packet)
-
+            send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
 
 
         # back to SEND state
