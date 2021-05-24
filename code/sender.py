@@ -125,8 +125,10 @@ class GBNSender(Automaton):
                 log.debug("Current buffer size test: %s", len(self.buffer))
 
 
+
                 header_GBN = GBN(type = 0,len=64, hlen = 6, num = self.current, win = self.win)
                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
+
 
 
 
@@ -137,8 +139,8 @@ class GBNSender(Automaton):
                 # send a packet to the receiver containing the created header #
                 # and the corresponding payload                               #
                 ###############################################################
-
-
+                header_GBN = GBN(type = 0, len=64, hlen = 6, num = self.current, win = self.win)
+                send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
 
                 # sequence number of next packet
@@ -175,6 +177,7 @@ class GBNSender(Automaton):
 
             ack = pkt.getlayer(GBN).num
 
+
             while self.unack != ack:
                 self.buffer[self.unack].remove()
                 if ack == 0:
@@ -184,15 +187,19 @@ class GBNSender(Automaton):
 
 
 
+
             ################################################################
             # TODO:                                                        #
             # remove all the acknowledged sequence numbers from the buffer #
             # make sure that you can handle a sequence number overflow     #
             ################################################################
 
-
-
-
+            while ack != self.current:
+                del self.buffer[ack]
+                if ack == 0:
+                    ack = 2**self.n_bits -1
+                else:
+                    ack = ack-1
 
 
 
@@ -209,19 +216,23 @@ class GBNSender(Automaton):
     def RETRANSMIT(self):
         """State for retransmitting packets."""
 
-        k = 0
-        for i in self.buffer:
-            header_GBN = GBN(type=0,len=64, hlen = 6, num=self.current - len(self.buffer) + k, win=self.win)
-            send(IP(src=sender, dst=receiver) / header_GBN / self.buffer[i])
-            k = k+1
-
         ##############################################
         # TODO:                                      #
         # retransmit all the unacknowledged packets  #
         # (all the packets currently in self.buffer) #
         ##############################################
 
-
+        #commented it out bc it raised an error and rewrote it below
+        """        k = 0
+        for i in self.buffer:
+            header_GBN = GBN(type=0, hlen=48, num=self.current - len(self.buffer) + k, win=self.win)
+            send(IP(src = sender, dst = receiver) / header_GBN / self.buffer[i])
+            k = k+1
+        """
+        # what's k for?
+        for k, packet in enumerate(self.buffer):
+            header_GBN = GBN(type=0,len=64, hlen=6, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
+            send(IP(src = self.sender, dst = self.receiver) / header_GBN / packet)
 
 
 
