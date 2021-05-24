@@ -130,10 +130,8 @@ class GBNSender(Automaton):
                 # send a packet to the receiver containing the created header #
                 # and the corresponding payload                               #
                 ###############################################################
-                header_GBN = GBN(type = 0, hlen = 48, num = self.current, win = self.win)
+                header_GBN = GBN(type = 0, len=64, hlen = 6, num = self.current, win = self.win)
                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
-
-                log.debug("hello %s", self.win)
 
 
                 # sequence number of next packet
@@ -213,7 +211,7 @@ class GBNSender(Automaton):
         """
         # what's k for?
         for k, packet in enumerate(self.buffer):
-            header_GBN = GBN(type=0, hlen=48, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
+            header_GBN = GBN(type=0,len=64, hlen=6, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
             send(IP(src = self.sender, dst = self.receiver) / header_GBN / packet)
 
 
