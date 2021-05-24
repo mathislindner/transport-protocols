@@ -175,12 +175,12 @@ class GBNSender(Automaton):
 
             ack = pkt.getlayer(GBN).num
 
-            while ack != self.current:
-                del self.buffer[ack]
+            while self.unack != ack:
+                self.buffer[self.unack].remove()
                 if ack == 0:
                     ack = 2**self.n_bits -1
                 else:
-                    ack = ack-1
+                    self.unack = self.unack+1
 
 
 
