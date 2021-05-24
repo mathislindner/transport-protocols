@@ -178,7 +178,7 @@ class GBNSender(Automaton):
                 #if self.unack in self.buffer:
                 self.buffer.pop(self.unack)
                 if self.unack == self.n_bits:
-                    ack = 0
+                    self.unack = 0
                 else:
                     self.unack = self.unack + 1
 
