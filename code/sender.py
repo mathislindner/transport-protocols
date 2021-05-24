@@ -173,9 +173,9 @@ class GBNSender(Automaton):
             # remove all the acknowledged sequence numbers from the buffer #
             # make sure that you can handle a sequence number overflow     #
             ################################################################
-            
+
             while self.unack != ack:
-                self.buffer[self.unack].remove()
+                self.buffer.delete(self.unack)
                 if ack == 0:
                     ack = 2**self.n_bits -1
                 else:
