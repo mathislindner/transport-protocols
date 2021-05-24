@@ -15,7 +15,7 @@ from scapy.packet import Packet, bind_layers
 from scapy.fields import (BitEnumField, BitField, ShortField, ByteField,
                           ConditionalField)
 from scapy.automaton import Automaton, ATMT
-
+import queue as que
 
 FORMAT = "   [RECEIVER:%(lineno)3s - %(funcName)12s()] %(message)s"
 logging.basicConfig(format=FORMAT)
@@ -66,7 +66,7 @@ class GBNReceiver(Automaton):
         p_file: Expected payload size
         end_receiver: Can we close the receiver?
         end_num: Sequence number of last packet + 1
-
+        buffer: buffer to save out of order segs
     """
 
     def parse_args(self, receiver, sender, nbits, out_file, window, p_data,
@@ -87,6 +87,7 @@ class GBNReceiver(Automaton):
         self.p_size = chunk_size
         self.end_receiver = False
         self.end_num = -1
+        self.buffer = que.Queue()
 
     def master_filter(self, pkt):
         """Filter packets of interest.
@@ -154,6 +155,8 @@ class GBNReceiver(Automaton):
                     # append payload (as binary data) to output file
                     with open(self.out_file, 'ab') as file:
                         file.write(payload)
+                        while not self.buffer.empty:
+                            file.write(self.buffer.get()) #default 0? FIFO?
 
                     log.debug("Delivered packet to upper layer: %s", num)
 
@@ -161,6 +164,7 @@ class GBNReceiver(Automaton):
 
                 # this was not the expected segment
                 else:
+                    self.buffer.put(payload) # if out of order seg arrives, add to buff
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
 
