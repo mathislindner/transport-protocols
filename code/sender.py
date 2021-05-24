@@ -125,10 +125,10 @@ class GBNSender(Automaton):
                 log.debug("Current buffer size test: %s", len(self.buffer))
 
 
-                header_GBN = GBN(type = 0, hlen = 48, num = self.current, win = self.win)
+                header_GBN = GBN(type = 0,len=64, hlen = 6, num = self.current, win = self.win)
                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
-                log.debug("hello %s", self.win)
+
 
 
                 ###############################################################
@@ -211,7 +211,7 @@ class GBNSender(Automaton):
 
         k = 0
         for i in self.buffer:
-            header_GBN = GBN(type=0, hlen=48, num=self.current - len(self.buffer) + k, win=self.win)
+            header_GBN = GBN(type=0,len=64, hlen = 6, num=self.current - len(self.buffer) + k, win=self.win)
             send(IP(src=sender, dst=receiver) / header_GBN / self.buffer[i])
             k = k+1
 
