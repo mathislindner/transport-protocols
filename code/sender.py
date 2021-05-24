@@ -205,7 +205,7 @@ class GBNSender(Automaton):
 
         for k in self.buffer:
             payload_len = len(self.buffer[k])
-            header_GBN = GBN(type=0,len = payload_len, hlen=6, num=self.current - len(self.buffer) + k, win=self.win) #hlen = sth+sth as vars and not just 48?
+            header_GBN = GBN(type=0,len = payload_len, hlen=6, num=self.unack  + k, win=self.win) #hlen = sth+sth as vars and not just 48?
             send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
 
 
