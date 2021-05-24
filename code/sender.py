@@ -175,7 +175,7 @@ class GBNSender(Automaton):
             # make sure that you can handle a sequence number overflow     #
             ################################################################
 
-            while self.unack != ack:
+            while self.unack != ack - 1:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
                 if self.unack == 2**self.n_bits -1:
