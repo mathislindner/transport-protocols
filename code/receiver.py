@@ -155,22 +155,19 @@ class GBNReceiver(Automaton):
                     # append payload (as binary data) to output file
                     with open(self.out_file, 'ab') as file:
                         file.write(payload)
-                        #while not self.buffer.empty:
-                         #   file.write(self.buffer.pop()) #default 0? FIFO?
-
+                        for k in self.buffer.keys():
+                            self.next = int((self.next + 1) % 2 ** self.n_bits)
+                            if (self.next in self.buffer):
+                                file.write(self.buffer.pop(self.next)) #default 0? FIFO?
+                                
                     log.debug("Delivered packet to upper layer: %s", num)
-
                     self.next = int((self.next + 1) % 2**self.n_bits)
-
+                    
+                    
                 # this was not the expected segment
                 else:
-                    if self.next in self.buffer:
-                        with open(self.out_file, 'ab') as file:
-                            file.write(self.buffer[self.next])
-                            self.next = int((self.next + 1) % 2**self.n_bits)
-                    else: 
-                        self.buffer[num] = payload # if out of order seg arrives, add to buff
-                        log.debug("Out of sequence segment [num = %s] received. "
+                    self.buffer[num] = payload
+                    log.debug("Out of sequence segment [num = %s] received. "
                                     "Expected %s", num, self.next)
 
             else:
