@@ -87,7 +87,7 @@ class GBNReceiver(Automaton):
         self.p_size = chunk_size
         self.end_receiver = False
         self.end_num = -1
-        self.buffer = que.Queue()
+        self.buffer = {}
 
     def master_filter(self, pkt):
         """Filter packets of interest.
@@ -155,8 +155,8 @@ class GBNReceiver(Automaton):
                     # append payload (as binary data) to output file
                     with open(self.out_file, 'ab') as file:
                         file.write(payload)
-                        while not self.buffer.empty:
-                            file.write(self.buffer.get()) #default 0? FIFO?
+                        #while not self.buffer.empty:
+                         #   file.write(self.buffer.pop()) #default 0? FIFO?
 
                     log.debug("Delivered packet to upper layer: %s", num)
 
@@ -164,9 +164,14 @@ class GBNReceiver(Automaton):
 
                 # this was not the expected segment
                 else:
-                    self.buffer.put(payload) # if out of order seg arrives, add to buff
-                    log.debug("Out of sequence segment [num = %s] received. "
-                              "Expected %s", num, self.next)
+                    if self.next in self.buffer:
+                        with open(self.out_file, 'ab') as file:
+                            file.write(self.buffer[self.next])
+                            self.next = int((self.next + 1) % 2**self.n_bits)
+                    else: 
+                        self.buffer[num] = payload # if out of order seg arrives, add to buff
+                        log.debug("Out of sequence segment [num = %s] received. "
+                                    "Expected %s", num, self.next)
 
             else:
                 # we received an ACK while we are supposed to receive only
