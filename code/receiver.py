@@ -172,7 +172,7 @@ class GBNReceiver(Automaton):
                 # this was not the expected segment
                 else:
                     self.buffer[num] = payload # if out of order seg arrives, add to buff
-                    log.debug("Out of sequence segment [num = %s] received. "
+                    log.debug("Out of sequence segment [num = %s] received. ")
 
                 # we received an ACK while we are supposed to receive only
                 log.error("ERROR: Received ACK segment: %s", pkt.show())
