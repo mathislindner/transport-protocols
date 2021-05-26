@@ -12,7 +12,7 @@
 TEST_NUM=2
 
 # Filenames of receiver and sender implementation
-RECEIVER_FILE="receiver.py"
+RECEIVER_FILE="receiver_mat.py"
 SENDER_FILE="sender.py"
 
 ########################################################################################################
