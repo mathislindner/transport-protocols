@@ -160,14 +160,12 @@ class GBNReceiver(Automaton):
 
                     self.next = int((self.next + 1) % 2 ** self.n_bits)
 
-                    if self.next in self.buffer:
-                        for k in self.buffer.keys():
-                            if k == self.next:
-                                log.debug("Added %s to output-file, k is %s",self.next,k)
-                                with open(self.out_file, 'ab') as file:
-                                    file.write(self.buffer[self.next])
-                                self.next = int((self.next + 1) % 2 ** self.n_bits)
-
+                    while self.next in self.buffer.keys():
+                        log.debug("Added %s to output-file, k is %s",self.next,k)
+                        with open(self.out_file, 'ab') as file:
+                            file.write(self.buffer.pop(self.next))
+                        self.next = int((self.next + 1) % 2 ** self.n_bits)
+                
                 # this was not the expected segment
                 else:
                     self.buffer[num] = payload
