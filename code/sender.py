@@ -180,10 +180,10 @@ class GBNSender(Automaton):
             
             if self.Q_4_2:
                 if ack == self.unack:
-                    log.debug("%s", self.unack)
+                    #log.debug("%s", self.unack)
                     self.counter = self.counter + 1
                     if self.counter == 3:
-                        header_GBN = GBN(type=0,len = len(self.buffer[ack]), hlen=6, num=ack, win=self.win) #hlen = sth+sth as vars and not just 48?
+                        header_GBN = GBN(type=0,len = len(self.buffer[ack]), hlen=6, num=ack, win=self.win) 
                         send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[ack])
                         self.counter = 0
                 else:
