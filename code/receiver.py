@@ -66,7 +66,7 @@ class GBNReceiver(Automaton):
         p_file: Expected payload size
         end_receiver: Can we close the receiver?
         end_num: Sequence number of last packet + 1
-        buffer: buffer to save out of order segs
+        buffer: buffer to save out of order segments
     """
 
     def parse_args(self, receiver, sender, nbits, out_file, window, p_data,
@@ -148,25 +148,27 @@ class GBNReceiver(Automaton):
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
+                '''if self.next in self.buffer:
+                    for k in self.buffer.keys():
+                        if k == self.next:
+                            with open(self.out_file, 'ab') as file:
+                                file.write(payload)
+                            self.next = int((self.next + 1) % 2 ** self.n_bits)'''
 
-
-                if self.next in self.buffer:
-                    with open(self.out_file, 'ab') as file:
-                            file.write(self.buffer[self.next])
-                            self.buffer.pop(self.next)
-                            self.next = int((self.next + 1) % 2**self.n_bits)
                 # this is the segment with the expected sequence number
-                elif num == self.next:
+                if num == self.next:
                     log.debug("Packet has expected sequence number: %s", num)
 
                     # append payload (as binary data) to output file
                     with open(self.out_file, 'ab') as file:
-                        payload_1 = payload
+                        file.write(payload)
+
+                    if self.next in self.buffer:
                         for k in self.buffer.keys():
-                            payload_1 = self.buffer.pop(k)
-                        file.write(payload_1)
-                        #for k in self.buffer.keys():
-                        #    file.write(self.buffer.pop(k))
+                            if k == self.next:
+                                with open(self.out_file, 'ab') as file:
+                                    file.write(payload)
+                                self.next = int((self.next + 1) % 2 ** self.n_bits)
 
                     log.debug("Delivered packet to upper layer: %s", num)
 
@@ -174,10 +176,13 @@ class GBNReceiver(Automaton):
 
                 # this was not the expected segment
                 else:
-                    self.buffer[num] = payload # if out of order seg arrives, add to buff
-                    log.debug("Out of sequence segment [num = %s] received. ")
+                    self.buffer[num] = payload
+                    log.debug("Out of sequence segment [num = %s] received. "
+                              "Expected %s", num, self.next)
 
+            else:
                 # we received an ACK while we are supposed to receive only
+                # data segments
                 log.error("ERROR: Received ACK segment: %s", pkt.show())
                 raise self.WAIT_SEGMENT()
 
