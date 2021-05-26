@@ -148,8 +148,15 @@ class GBNReceiver(Automaton):
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
+
+
+                if self.next in self.buffer:
+                    with open(self.out_file, 'ab') as file:
+                            file.write(self.buffer[self.next])
+                            self.buffer.pop(self.next)
+                            self.next = int((self.next + 1) % 2**self.n_bits)
                 # this is the segment with the expected sequence number
-                if num == self.next:
+                elif num == self.next:
                     log.debug("Packet has expected sequence number: %s", num)
 
                     # append payload (as binary data) to output file
@@ -164,15 +171,9 @@ class GBNReceiver(Automaton):
 
                 # this was not the expected segment
                 else:
-                    if self.next in self.buffer:
-                        with open(self.out_file, 'ab') as file:
-                            file.write(self.buffer[self.next])
-                            self.buffer.pop(self.next)
-                            self.next = int((self.next + 1) % 2**self.n_bits)
-                    else: 
-                        self.buffer[num] = payload # if out of order seg arrives, add to buff
-                        log.debug("Out of sequence segment [num = %s] received. "
-                                    "Expected %s", num, self.next)
+                    self.buffer[num] = payload # if out of order seg arrives, add to buff
+                    log.debug("Out of sequence segment [num = %s] received. "
+                                "Expected %s", num, self.next)
 
             else:
                 # we received an ACK while we are supposed to receive only
