@@ -154,9 +154,12 @@ class GBNReceiver(Automaton):
 
                     # append payload (as binary data) to output file
                     with open(self.out_file, 'ab') as file:
-                        file.write(payload)
+                        payload_1 = payload
                         for k in self.buffer.keys():
-                            file.write(self.buffer.pop(k)) #default 0? FIFO?
+                            payload_1 = self.buffer.pop(k)
+                        file.write(payload_1)
+                        #for k in self.buffer.keys():
+                        #    file.write(self.buffer.pop(k))
 
                     log.debug("Delivered packet to upper layer: %s", num)
 
