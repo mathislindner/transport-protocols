@@ -150,11 +150,7 @@ class GBNReceiver(Automaton):
 
                 # this is the segment with the expected sequence number
                 if num == self.next:
-                    log.debug("Packet has expected sequence number: %s", num)
-
-                    # append payload (as binary data) to output file
-                    with open(self.out_file, 'ab') as file:
-                        file.write(payload)
+                    log.debug("Packet has expected sequence number: %s", num)  file.write(payload)
 
                     self.next = int((self.next + 1) % 2**self.n_bits)
                     if self.next in self.buffer:
