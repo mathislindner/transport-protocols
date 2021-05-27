@@ -160,11 +160,7 @@ class GBNReceiver(Automaton):
 >>>>>>> caa898d31d5ff6f718fdc35aaaf62ac487a14c2d:code/receiver_1.py
                 # this is the segment with the expected sequence number
                 if num == self.next:
-                    log.debug("Packet has expected sequence number: %s", num)
-
-                    # append payload (as binary data) to output file
-                    with open(self.out_file, 'ab') as file:
-                        file.write(payload)
+                    log.debug("Packet has expected sequence number: %s", num)  file.write(payload)
 
 <<<<<<< HEAD:code/receiver.py
 =======
