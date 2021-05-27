@@ -181,7 +181,7 @@ class GBNSender(Automaton):
             
             if self.Q_4_2:
                 self.acks_received[ack]  += 1
-                if self.acks_received[ack] > 2
+                if self.acks_received[ack] > 2:
                     header_GBN = GBN(type=0,len = len(self.buffer[ack]), hlen=6, num=ack, win=self.win) 
                     send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[ack])
                     self.acks_received[ack] = 0
