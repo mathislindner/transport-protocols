@@ -44,7 +44,18 @@ class GBN(Packet):
                    ShortField("len", None),
                    ByteField("hlen", 0),
                    ByteField("num", 0),
-                   ByteField("win", 0)]
+                   ByteField("win", 0), 
+                   ConditionalField ( ByteField ("block_length", 0, 1, 2, 3), lambda pkt:pkt.hlen == 7),
+                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
+                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.block_length >= 1),
+                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField ( ByteField ("padding", 0), lambda pkt:pkt.block_length >= 3),
+                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.block_length >= 3),
+                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.block_length >= 3)]
+
+
 
 
 # GBN header is coming after the IP header
@@ -123,6 +134,7 @@ class GBNReceiver(Automaton):
         """State for incoming data."""
         num = pkt.getlayer(GBN).num
         payload = bytes(pkt.getlayer(GBN).payload)
+        sack_support = pkt.getlayer(GBN).options
 
         # received segment was lost/corrupted in the network
         if random.random() < self.p_data:
@@ -185,6 +197,24 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
+                sack_support = pkt.getlayer(GBN).options
+                if(sack_support == 1):
+                    header_GBN = GBN(type="ack",
+                                 options=0,
+                                 len=0,
+                                 hlen=6,
+                                 num=self.next,
+                                 win=self.win,
+                                 block_length = ,
+                                 left_edge_1 = ,
+                                 length_1 = ,
+                                 padding_1 = ,
+                                 left_edge_2 = ,
+                                 length_2 = ,
+                                 padding_2 = ,
+                                 left_edge_3 = ,
+                                 length_3 = )
+                                 
                 header_GBN = GBN(type="ack",
                                  options=0,
                                  len=0,
