@@ -9,10 +9,10 @@
 # 3: sender Q4.2 (Selective Repeat)
 # 4: receiver Q4.3 (SACK header generation)
 # 5: sender Q4.3 (retransmission after receiving SACK header)
-TEST_NUM=3
+TEST_NUM=4
 
 # Filenames of receiver and sender implementation
-RECEIVER_FILE="code_receiver.py"
+RECEIVER_FILE="receiver_sven.py"
 SENDER_FILE="sender.py"
 
 ########################################################################################################

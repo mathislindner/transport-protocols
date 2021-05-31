@@ -148,6 +148,7 @@ class GBNReceiver(Automaton):
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
+<<<<<<< HEAD
 <<<<<<< HEAD:code/receiver.py
                 if self.next in self.buffer:
                     for k in self.buffer.keys():
@@ -159,9 +160,13 @@ class GBNReceiver(Automaton):
 =======
 >>>>>>> caa898d31d5ff6f718fdc35aaaf62ac487a14c2d:code/receiver_1.py
                 # this is the segment with the expected sequence number
+=======
+                                # this is the segment with the expected sequence number
+>>>>>>> 867bffc6affc384e230850141b2aa0719966af2d
                 if num == self.next:
-                    log.debug("Packet has expected sequence number: %s", num)  file.write(payload)
+                    log.debug("Packet has expected sequence number: %s", num)
 
+<<<<<<< HEAD
 <<<<<<< HEAD:code/receiver.py
 =======
                     self.next = int((self.next + 1) % 2**self.n_bits)
@@ -171,11 +176,23 @@ class GBNReceiver(Automaton):
                                 with open(self.out_file, 'ab') as file:
                                     file.write(self.buffer[k])
                                 self.next = int((self.next + 1) % 2 ** self.n_bits)
+=======
+                    # append payload (as binary data) to output file
+                    with open(self.out_file, 'ab') as file:
+                        file.write(payload)
+>>>>>>> 867bffc6affc384e230850141b2aa0719966af2d
 
 >>>>>>> caa898d31d5ff6f718fdc35aaaf62ac487a14c2d:code/receiver_1.py
                     log.debug("Delivered packet to upper layer: %s", num)
 
+                    self.next = int((self.next + 1) % 2 ** self.n_bits)
 
+                    while self.next in self.buffer.keys():
+                        log.debug("Added %s to output-file",self.next)
+                        with open(self.out_file, 'ab') as file:
+                            file.write(self.buffer.pop(self.next))
+                        self.next = int((self.next + 1) % 2 ** self.n_bits)
+                
                 # this was not the expected segment
                 else:
                     self.buffer[num] = payload
