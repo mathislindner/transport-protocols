@@ -3,6 +3,7 @@
 # Disable pylint rules which are incompatible with our naming conventions
 # pylint: disable=C0103,W0221,W0201,R0902,R0913,R0201
 
+
 import os
 import random
 import logging
@@ -38,13 +39,13 @@ class GBN(Packet):
         win: sender/receiver window size
         block_length: indecates the how many additional blocks will be used
         left_edge_1: first ack of first sequence
-        length_1:
+        length_1: number of acks in the first sequence
         padding_1: --
         left_edge_2: first ack of second sequence
-        length_2:
+        length_2: number of acks in the second sequence
         padding_2: --
         left_edge_3: first ack of third sequence
-        length_3:
+        length_3: number of acks in the third sequence
     """
     name = 'GBN'
     fields_desc = [BitEnumField("type", 0, 1, {0: "data", 1: "ack"}),
@@ -53,7 +54,7 @@ class GBN(Packet):
                    ByteField("hlen", 0),
                    ByteField("num", 0),
                    ByteField("win", 0),
-                   ConditionalField ( ByteField ("block_length", 0), lambda pkt:pkt.options == 1),
+                   ConditionalField ( ByteField ("block_length", 0, 1, 2, 3), lambda pkt:pkt.options == 1),
                    ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
                    ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.block_length >= 1),
                    ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.block_length >= 2),
@@ -169,10 +170,6 @@ class GBNReceiver(Automaton):
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
-                holes = 0 
-                for i in self.buffer:
-                    if(i != 0 and self.buffer[i-1] + 1 != self.buffer[i]) holes += 1
-                else
 
                 # check if last packet --> end receiver
                 if len(payload) < self.p_size:
@@ -218,45 +215,45 @@ class GBNReceiver(Automaton):
             else:
                 if sack_support == 1 and self.block_length == 1:
                     header_GBN = GBN(type="ack",
-                                 options=1,
-                                 len=0,
-                                 hlen=9,
-                                 num=self.next,
-                                 win=self.win,
-                                 block_length=self.block_length,
-                                 left_edge_1=self.left_edge_1,
-                                 length_1=self.length_1)
+                                     options=1,
+                                     len=0,
+                                     hlen=9,
+                                     num=self.next,
+                                     win=self.win,
+                                     block_length=self.block_length,
+                                     left_edge_1=self.left_edge_1,
+                                     length_1=self.length_1)
 
                 elif sack_support == 1 and self.block_length == 2:
                     header_GBN = GBN(type="ack",
-                                 options=1,
-                                 len=0,
-                                 hlen=12,
-                                 num=self.next,
-                                 win=self.win,
-                                 block_length = self.block_length,
-                                 left_edge_1 = self.left_edge_1,
-                                 length_1 = self.length_1,
-                                 padding_1 = self.padding_1,
-                                 left_edge_2 = self.left_edge_2,
-                                 length_2 = self.length_2)
+                                     options=1,
+                                     len=0,
+                                     hlen=12,
+                                     num=self.next,
+                                     win=self.win,
+                                     block_length=self.block_length,
+                                     left_edge_1=self.left_edge_1,
+                                     length_1=self.length_1,
+                                     padding_1=self.padding_1,
+                                     left_edge_2=self.left_edge_2,
+                                     length_2=self.length_2)
 
                 elif sack_support == 1 and self.block_length == 3:
                     header_GBN = GBN(type="ack",
-                                 options=1,
-                                 len=0,
-                                 hlen=18,
-                                 num=self.next,
-                                 win=self.win,
-                                 block_length = self.block_length,
-                                 left_edge_1 = self.left_edge_1,
-                                 length_1 = self.length_1,
-                                 padding_1 = self.padding_1,
-                                 left_edge_2 = self.left_edge_2,
-                                 length_2 = self.length_2,
-                                 padding_2 = self.padding_2,
-                                 left_edge_3 = self.left_edge_3,
-                                 length_3 = self.length_3)
+                                     options=1,
+                                     len=0,
+                                     hlen=18,
+                                     num=self.next,
+                                     win=self.win,
+                                     block_length=self.block_length,
+                                     left_edge_1=self.left_edge_1,
+                                     length_1=self.length_1,
+                                     padding_1=self.padding_1,
+                                     left_edge_2=self.left_edge_2,
+                                     length_2=self.length_2,
+                                     padding_2=self.padding_2,
+                                     left_edge_3=self.left_edge_3,
+                                     length_3=self.length_3)
 
                 else:
                     header_GBN = GBN(type="ack",
