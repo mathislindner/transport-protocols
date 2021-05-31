@@ -148,21 +148,24 @@ class GBNReceiver(Automaton):
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
-                # this is the segment with the expected sequence number
+                                # this is the segment with the expected sequence number
                 if num == self.next:
-                    log.debug("Packet has expected sequence number: %s", num)  file.write(payload)
+                    log.debug("Packet has expected sequence number: %s", num)
 
-                    self.next = int((self.next + 1) % 2**self.n_bits)
-                    if self.next in self.buffer:
-                        for k in self.buffer.keys():
-                            if k == self.next:
-                                with open(self.out_file, 'ab') as file:
-                                    file.write(self.buffer[k])
-                                self.next = int((self.next + 1) % 2 ** self.n_bits)
+                    # append payload (as binary data) to output file
+                    with open(self.out_file, 'ab') as file:
+                        file.write(payload)
 
                     log.debug("Delivered packet to upper layer: %s", num)
 
+                    self.next = int((self.next + 1) % 2 ** self.n_bits)
 
+                    while self.next in self.buffer.keys():
+                        log.debug("Added %s to output-file",self.next)
+                        with open(self.out_file, 'ab') as file:
+                            file.write(self.buffer.pop(self.next))
+                        self.next = int((self.next + 1) % 2 ** self.n_bits)
+                
                 # this was not the expected segment
                 else:
                     self.buffer[num] = payload
