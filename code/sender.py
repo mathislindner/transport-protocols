@@ -83,10 +83,11 @@ class GBNSender(Automaton):
         self.current = 0
         self.unack = 0
         self.receiver_win = win
-        self.Q_4_2 = Q_4_2
+        self.Q_4_2 = Q_4_2 
         self.counter = 0
         self.SACK = Q_4_3
         self.Q_4_4 = Q_4_4
+        self.acks_received = {} # ack number: received times
 
     def master_filter(self, pkt):
         """Filter packets of interest.
@@ -179,16 +180,15 @@ class GBNSender(Automaton):
 
             
             if self.Q_4_2:
-                if ack == self.unack:
-                    #log.debug("%s", self.unack)
-                    self.counter = self.counter + 1
-                    if self.counter == 3:
+                if ack in self.acks_received:
+                    self.acks_received[ack]  += 1
+                    if self.acks_received[ack] > 2:
                         header_GBN = GBN(type=0,len = len(self.buffer[ack]), hlen=6, num=ack, win=self.win) 
                         send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[ack])
-                        self.counter = 0
+                        #add to self.buffer bc we jsut resent?
+                        self.acks_received[ack] = 0
                 else:
-                    self.counter = 0
-
+                    self.acks_received[ack] = 1
 
             while self.unack != ack:
                 if self.unack in self.buffer:
