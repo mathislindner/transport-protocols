@@ -3,7 +3,6 @@
 # Disable pylint rules which are incompatible with our naming conventions
 # pylint: disable=C0103,W0221,W0201,R0902,R0913,R0201
 
-
 import os
 import random
 import logging
