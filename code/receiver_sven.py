@@ -215,7 +215,7 @@ class GBNReceiver(Automaton):
             else:
                 if sack_support == 1 and self.block_length == 1:
                     header_GBN = GBN(type="ack",
-                                 options=0,
+                                 options=1,
                                  len=0,
                                  hlen=9,
                                  num=self.next,
@@ -226,7 +226,7 @@ class GBNReceiver(Automaton):
 
                 elif sack_support == 1 and self.block_length == 2:
                     header_GBN = GBN(type="ack",
-                                 options=0,
+                                 options=1,
                                  len=0,
                                  hlen=12,
                                  num=self.next,
@@ -240,7 +240,7 @@ class GBNReceiver(Automaton):
 
                 elif sack_support == 1 and self.block_length == 3:
                     header_GBN = GBN(type="ack",
-                                 options=0,
+                                 options=1,
                                  len=0,
                                  hlen=18,
                                  num=self.next,
