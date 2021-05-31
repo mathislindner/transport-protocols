@@ -37,6 +37,15 @@ class GBN(Packet):
         hlen: header length
         num: sequence/ACK number
         win: sender/receiver window size
+        block_length: indecates the how many additional blocks will be used
+        left_edge_1: first ack of first sequence
+        length_1:
+        padding_1: --
+        left_edge_2: first ack of second sequence
+        length_2:
+        padding_2: --
+        left_edge_3: first ack of third sequence
+        length_3:
     """
     name = 'GBN'
     fields_desc = [BitEnumField("type", 0, 1, {0: "data", 1: "ack"}),
@@ -44,7 +53,7 @@ class GBN(Packet):
                    ShortField("len", None),
                    ByteField("hlen", 0),
                    ByteField("num", 0),
-                   ByteField("win", 0), 
+                   ByteField("win", 0),
                    ConditionalField ( ByteField ("block_length", 0, 1, 2, 3), lambda pkt:pkt.options == 1),
                    ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
                    ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.block_length >= 1),
@@ -54,8 +63,6 @@ class GBN(Packet):
                    ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.block_length >= 3),
                    ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.block_length >= 3),
                    ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.block_length >= 3)]
-
-
 
 
 # GBN header is coming after the IP header
@@ -186,7 +193,7 @@ class GBNReceiver(Automaton):
                         with open(self.out_file, 'ab') as file:
                             file.write(self.buffer.pop(self.next))
                         self.next = int((self.next + 1) % 2 ** self.n_bits)
-                
+
                 # this was not the expected segment
                 else:
                     self.buffer[num] = payload
@@ -206,12 +213,36 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
-                sack_support = pkt.getlayer(GBN).options
-                if(sack_support == 1 and self.block_length == 3):
+                if sack_support == 1 and self.block_length == 1:
                     header_GBN = GBN(type="ack",
                                  options=0,
                                  len=0,
-                                 hlen=6,
+                                 hlen=9,
+                                 num=self.next,
+                                 win=self.win,
+                                 block_length=self.block_length,
+                                 left_edge_1=self.left_edge_1,
+                                 length_1=self.length_1)
+
+                elif sack_support == 1 and self.block_length == 2:
+                    header_GBN = GBN(type="ack",
+                                 options=0,
+                                 len=0,
+                                 hlen=12,
+                                 num=self.next,
+                                 win=self.win,
+                                 block_length = self.block_length,
+                                 left_edge_1 = self.left_edge_1,
+                                 length_1 = self.length_1,
+                                 padding_1 = self.padding_1,
+                                 left_edge_2 = self.left_edge_2,
+                                 length_2 = self.length_2)
+
+                elif sack_support == 1 and self.block_length == 3:
+                    header_GBN = GBN(type="ack",
+                                 options=0,
+                                 len=0,
+                                 hlen=18,
                                  num=self.next,
                                  win=self.win,
                                  block_length = self.block_length,
@@ -223,29 +254,7 @@ class GBNReceiver(Automaton):
                                  padding_2 = self.padding_2,
                                  left_edge_3 = self.left_edge_3,
                                  length_3 = self.length_3)
-                elif(sack_support == 1 and self.block_length == 2):
-                    header_GBN = GBN(type="ack",
-                                 options=0,
-                                 len=0,
-                                 hlen=6,
-                                 num=self.next,
-                                 win=self.win,
-                                 block_length = self.block_length,
-                                 left_edge_1 = self.left_edge_1,
-                                 length_1 = self.length_1,
-                                 padding_1 = self.padding_1,
-                                 left_edge_2 = self.left_edge_2,
-                                 length_2 = self.length_2)
-                elif(sack_support == 1 and self.block_length == 1):
-                    header_GBN = GBN(type="ack",
-                                 options=0,
-                                 len=0,
-                                 hlen=6,
-                                 num=self.next,
-                                 win=self.win,
-                                 block_length = self.block_length,
-                                 left_edge_1 = self.left_edge_1,
-                                 length_1 = self.length_1)
+
                 else:
                     header_GBN = GBN(type="ack",
                                      options=0,
@@ -310,4 +319,3 @@ if __name__ == "__main__":
                                output_file, args.window_size, args.data_l,
                                args.ack_l, size)
     # start automaton
-    GBN_receiver.run()
