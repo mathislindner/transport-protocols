@@ -189,7 +189,7 @@ class GBNReceiver(Automaton):
                         else: 
                             seq_length += 1
 
-                    if len(sack_support andself.block_buffer) == 2:
+                    if len(self.block_buffer) == 2:
                         self.block_length = 1
                         self.left_edge_1 = self.block_buffer[0]
                         self.length_1 = self.block_buffer[1]
