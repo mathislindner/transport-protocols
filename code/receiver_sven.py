@@ -53,15 +53,15 @@ class GBN(Packet):
                    ByteField("hlen", 0),
                    ByteField("num", 0),
                    ByteField("win", 0),
-                   ConditionalField(ByteField("block_length", 0), lambda pkt:pkt.options == 1),
-                   ConditionalField(ByteField("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
-                   ConditionalField(ByteField("length_1", 0), lambda pkt:pkt.block_length >= 1),
-                   ConditionalField(ByteField("padding_1", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField(ByteField("left_edge_2", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField(ByteField("length_2", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField(ByteField("padding_2", 0), lambda pkt:pkt.block_length >= 3),
-                   ConditionalField(ByteField("left_edge_3", 0), lambda pkt:pkt.block_length >= 3),
-                   ConditionalField(ByteField("length_3", 0), lambda pkt:pkt.block_length >= 3)]
+                   ConditionalField(ByteField("block_length", 0), lambda pkt: pkt.options == 1),
+                   ConditionalField(ByteField("left_edge_1", 0), lambda pkt: pkt.block_length >= 1),
+                   ConditionalField(ByteField("length_of_block_1", 0), lambda pkt: pkt.block_length >= 1),
+                   ConditionalField(ByteField("padding_2", 0), lambda pkt: pkt.block_length >= 2),
+                   ConditionalField(ByteField("left_edge_2", 0), lambda pkt: pkt.block_length >= 2),
+                   ConditionalField(ByteField("length_of_block_2", 0), lambda pkt: pkt.block_length >= 2),
+                   ConditionalField(ByteField("padding_3", 0), lambda pkt: pkt.block_length >= 3),
+                   ConditionalField(ByteField("left_edge_3", 0), lambda pkt: pkt.block_length >= 3),
+                   ConditionalField(ByteField("length_of_block_3", 0), lambda pkt: pkt.block_length >= 3)]
 
 
 # GBN header is coming after the IP header
@@ -107,13 +107,13 @@ class GBNReceiver(Automaton):
         self.buffer = {}
         self.block_length = 0
         self.left_edge_1 = 0
-        self.length_1 = 0
+        self.length_of_block__1 = 0
         self.padding_1 = 0
         self.left_edge_2 = 0
-        self.length_2 = 0
+        self.length_of_block_2 = 0
         self.padding_2 = 0
         self.left_edge_3 = 0
-        self.length_3 = 0
+        self.length_of_block_3 = 0
         self.block_buffer = []
 
     def master_filter(self, pkt):
@@ -172,6 +172,7 @@ class GBNReceiver(Automaton):
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
+                #add the ack to the block_buffer so we see if we need to send SACK headers
                 self.block_buffer.append(ack)
 
                 # check if last packet --> end receiver
@@ -216,77 +217,81 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
-                holes = 0
-                seq_length = 1
-                block_seq = []
-                block_seq_length =[]
-                for i in len(self.block_buffer)-1:
-                    if self.block_buffer[i] + 1 == self.lock_buffer[i+1] and holes == 0:
-                        continue
-                    if self.block_buffer[i] + 1 == self.lock_buffer[i+1]:
-                        seq_length += 1
-                    elif self.block_buffer[i] + 1 != self.lock_buffer[i+1]:
-                        block_seq_length.append(seq_length)
-                        seq_length = 1
-                        holes += 1
-                        if len(block_seq) > 3:
+                if sack_support == 1:
+                    seq_length = 1
+                    block_seq = []
+                    block_seq_length =[]
+
+                    for i in len(self.block_buffer)-1:
+                        # going over the correctly received segments
+                        if self.block_buffer[i] + 1 == self.lock_buffer[i+1] and self.block_length == 0:
+                            continue
+                        # counting the length of segments that are in order
+                        elif self.block_buffer[i] + 1 == self.lock_buffer[i + 1] and self.block_length != 0:
+                            seq_length += 1
+                        # first unordered segment 
+                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 0:
+                            self.block_length = 1
+                            self.left_edge_1 = self.lock_buffer[i+1]
+                        # length of first unordered segments and second unordered segment
+                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 1:
+                            self.length_1 = seq_length
+                            seq_length = 1
+                            self.block_length = 2
+                            self.left_edge_2 = self.lock_buffer[i+1]
+                        # length of second unordered segments and third unordered segment
+                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 2:
+                            self.length_2 = seq_length
+                            seq_length = 1
+                            self.block_length[i]
+                            self.left_edge_3 = self.lock_buffer[i+1]
+                        # length of third unordered segments and break up
+                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 3:
+                            self.length_3 = seq_length
+                            seq_length = 1
                             break
-                        block_seq.append(self.block_buffer[i+1])
 
-                block_seq_length.pop([0])
-                self.block_length = len(self.block_buffer)
+                    if self.block_length == 1:
+                        header_GBN = GBN(type="ack",
+                                         options=1,
+                                         len=0,
+                                         hlen=9,
+                                         num=self.next,
+                                         win=self.win,
+                                         block_length=self.block_length,
+                                         left_edge_1=self.left_edge_1,
+                                         length_1=self.length_1)
 
-                if self.block_length >= 1:
-                    self.left_edge_1 = block_seq.pop([0])
-                    self.length_1 = block_seq_length.pop([0])
-                if self.block_length >= 2:
-                    self.left_edge_2 = block_seq.pop([0])
-                    self.length_2 = block_seq_length.pop([0])
-                if self.block_length == 3:
-                    self.left_edge_3 = block_seq.pop([0])
-                    self.length_3 = block_seq_length.pop([0])
+                    elif self.block_length == 2:
+                        header_GBN = GBN(type="ack",
+                                         options=1,
+                                         len=0,
+                                         hlen=12,
+                                         num=self.next,
+                                         win=self.win,
+                                         block_length=self.block_length,
+                                         left_edge_1=self.left_edge_1,
+                                         length_1=self.length_1,
+                                         padding_1=self.padding_1,
+                                         left_edge_2=self.left_edge_2,
+                                         length_2=self.length_2)
 
-                if sack_support == 1 and self.block_length == 1:
-                    header_GBN = GBN(type="ack",
-                                     options=1,
-                                     len=0,
-                                     hlen=9,
-                                     num=self.next,
-                                     win=self.win,
-                                     block_length=self.block_length,
-                                     left_edge_1=self.left_edge_1,
-                                     length_1=self.length_1)
-
-                elif sack_support == 1 and self.block_length == 2:
-                    header_GBN = GBN(type="ack",
-                                     options=1,
-                                     len=0,
-                                     hlen=12,
-                                     num=self.next,
-                                     win=self.win,
-                                     block_length=self.block_length,
-                                     left_edge_1=self.left_edge_1,
-                                     length_1=self.length_1,
-                                     padding_1=self.padding_1,
-                                     left_edge_2=self.left_edge_2,
-                                     length_2=self.length_2)
-
-                elif sack_support == 1 and self.block_length == 3:
-                    header_GBN = GBN(type="ack",
-                                     options=1,
-                                     len=0,
-                                     hlen=18,
-                                     num=self.next,
-                                     win=self.win,
-                                     block_length=self.block_length,
-                                     left_edge_1=self.left_edge_1,
-                                     length_1=self.length_1,
-                                     padding_1=self.padding_1,
-                                     left_edge_2=self.left_edge_2,
-                                     length_2=self.length_2,
-                                     padding_2=self.padding_2,
-                                     left_edge_3=self.left_edge_3,
-                                     length_3=self.length_3)
+                    elif self.block_length == 3:
+                        header_GBN = GBN(type="ack",
+                                         options=1,
+                                         len=0,
+                                         hlen=18,
+                                         num=self.next,
+                                         win=self.win,
+                                         block_length=self.block_length,
+                                         left_edge_1=self.left_edge_1,
+                                         length_1=self.length_1,
+                                         padding_1=self.padding_1,
+                                         left_edge_2=self.left_edge_2,
+                                         length_2=self.length_2,
+                                         padding_2=self.padding_2,
+                                         left_edge_3=self.left_edge_3,
+                                         length_3=self.length_3)
 
                 else:
                     header_GBN = GBN(type="ack",
