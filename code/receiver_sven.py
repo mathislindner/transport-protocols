@@ -53,15 +53,15 @@ class GBN(Packet):
                    ByteField("hlen", 0),
                    ByteField("num", 0),
                    ByteField("win", 0),
-                   ConditionalField ( ByteField ("block_length", 0, 1, 2, 3), lambda pkt:pkt.options == 1),
-                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
-                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.block_length >= 1),
-                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.block_length >= 3),
-                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.block_length >= 3),
-                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.block_length >= 3)]
+                   ConditionalField(ByteField ("block_length", 0, 1, 2, 3), lambda pkt:pkt.options == 1),
+                   ConditionalField(ByteField ("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
+                   ConditionalField(ByteField ("length_1", 0), lambda pkt:pkt.block_length >= 1),
+                   ConditionalField(ByteField ("padding_1", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField(ByteField ("left_edge_2", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField(ByteField ("length_2", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField(ByteField ("padding_2", 0), lambda pkt:pkt.block_length >= 3),
+                   ConditionalField(ByteField ("left_edge_3", 0), lambda pkt:pkt.block_length >= 3),
+                   ConditionalField(ByteField ("length_3", 0), lambda pkt:pkt.block_length >= 3)]
 
 
 # GBN header is coming after the IP header
