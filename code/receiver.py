@@ -171,41 +171,42 @@ class GBNReceiver(Automaton):
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
-                counter = 0
-                seq_length = 0
-                last_key = next(self.buffer)
-                for key in self.buffer.keys():
-                    if key != last_key + 1:
-                        last_key = key
-                        if counter == 0:
-                            self.block_buffer[counter] = key
-                        else:
-                            self.block_buffer[counter] = seq_length
-                            seq_length = 0
-                            self.block_buffer[counter + 1] = key
-                            counter += 1
-                        counter += 1 
-                    else: 
-                        seq_length += 1
+                if(sack_support):
+                    counter = 0
+                    seq_length = 0
+                    last_key = next(self.buffer)
+                    for key in self.buffer.keys():
+                        if key != last_key + 1:
+                            last_key = key
+                            if counter == 0:
+                                self.block_buffer[counter] = key
+                            else:
+                                self.block_buffer[counter] = seq_length
+                                seq_length = 0
+                                self.block_buffer[counter + 1] = key
+                                counter += 1
+                            counter += 1 
+                        else: 
+                            seq_length += 1
 
-                if len(self.block_buffer) == 2:
-                    self.block_length = 1
-                    self.left_edge_1 = self.block_buffer[0]
-                    self.length_1 = self.block_buffer[1]
-                elif len(self.block_buffer) == 4:
-                    self.block_length = 2
-                    self.left_edge_1 = self.block_buffer[0]
-                    self.length_1 = self.block_buffer[1]
-                    self.left_edge_2 = self.block_buffer[2]
-                    self.length_2 = self.block_buffer[3]
-                elif len(self.block_buffer) >= 6:
-                    self.block_length = 3
-                    self.left_edge_1 = self.block_buffer[0]
-                    self.length_1 = self.block_buffer[1]
-                    self.left_edge_2 = self.block_buffer[2]
-                    self.length_2 = self.block_buffer[3]
-                    self.left_edge_3 = self.block_buffer[4]
-                    self.length_3 = self.block_buffer[5]
+                    if len(sack_support andself.block_buffer) == 2:
+                        self.block_length = 1
+                        self.left_edge_1 = self.block_buffer[0]
+                        self.length_1 = self.block_buffer[1]
+                    elif len(self.block_buffer) == 4:
+                        self.block_length = 2
+                        self.left_edge_1 = self.block_buffer[0]
+                        self.length_1 = self.block_buffer[1]
+                        self.left_edge_2 = self.block_buffer[2]
+                        self.length_2 = self.block_buffer[3]
+                    elif len(self.block_buffer) >= 6:
+                        self.block_length = 3
+                        self.left_edge_1 = self.block_buffer[0]
+                        self.length_1 = self.block_buffer[1]
+                        self.left_edge_2 = self.block_buffer[2]
+                        self.length_2 = self.block_buffer[3]
+                        self.left_edge_3 = self.block_buffer[4]
+                        self.length_3 = self.block_buffer[5]
 
                     
 
