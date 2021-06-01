@@ -53,15 +53,15 @@ class GBN(Packet):
                    ByteField("hlen", 0),
                    ByteField("num", 0),
                    ByteField("win", 0),
-                   ConditionalField(ByteField ("block_length", 0, 1, 2, 3), lambda pkt:pkt.options == 1),
-                   ConditionalField(ByteField ("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
-                   ConditionalField(ByteField ("length_1", 0), lambda pkt:pkt.block_length >= 1),
-                   ConditionalField(ByteField ("padding_1", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField(ByteField ("left_edge_2", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField(ByteField ("length_2", 0), lambda pkt:pkt.block_length >= 2),
-                   ConditionalField(ByteField ("padding_2", 0), lambda pkt:pkt.block_length >= 3),
-                   ConditionalField(ByteField ("left_edge_3", 0), lambda pkt:pkt.block_length >= 3),
-                   ConditionalField(ByteField ("length_3", 0), lambda pkt:pkt.block_length >= 3)]
+                   ConditionalField(ByteField("block_length", 0, 1, 2, 3), lambda pkt:pkt.options == 1),
+                   ConditionalField(ByteField("left_edge_1", 0), lambda pkt:pkt.block_length >= 1),
+                   ConditionalField(ByteField("length_1", 0), lambda pkt:pkt.block_length >= 1),
+                   ConditionalField(ByteField("padding_1", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField(ByteField("left_edge_2", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField(ByteField("length_2", 0), lambda pkt:pkt.block_length >= 2),
+                   ConditionalField(ByteField("padding_2", 0), lambda pkt:pkt.block_length >= 3),
+                   ConditionalField(ByteField("left_edge_3", 0), lambda pkt:pkt.block_length >= 3),
+                   ConditionalField(ByteField("length_3", 0), lambda pkt:pkt.block_length >= 3)]
 
 
 # GBN header is coming after the IP header
@@ -114,6 +114,7 @@ class GBNReceiver(Automaton):
         self.padding_2 = 0
         self.left_edge_3 = 0
         self.length_3 = 0
+        self.block_buffer = []
 
     def master_filter(self, pkt):
         """Filter packets of interest.
@@ -169,13 +170,14 @@ class GBNReceiver(Automaton):
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
+                self.block_buffer.append(ack)
 
                 # check if last packet --> end receiver
                 if len(payload) < self.p_size:
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
-                                # this is the segment with the expected sequence number
+                # this is the segment with the expected sequence number
                 if num == self.next:
                     log.debug("Packet has expected sequence number: %s", num)
 
@@ -212,6 +214,36 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
+                holes = 0
+                seq_length = 1
+                block_seq = []
+                block_seq_length =[]
+                for i in len(self.block_buffer)-1:
+                    if self.block_buffer[i] + 1 == self.lock_buffer[i+1] and holes == 0:
+                        continue
+                    if self.block_buffer[i] + 1 == self.lock_buffer[i+1]:
+                        seq_length += 1
+                    elif self.block_buffer[i] + 1 != self.lock_buffer[i+1]:
+                        block_seq_length.append(seq_length)
+                        seq_length = 1
+                        holes += 1
+                        if len(block_seq) > 3:
+                            break
+                        block_seq.append(self.block_buffer[i+1])
+
+                block_seq_length.pop([0])
+                self.block_length = len(self.block_buffer)
+
+                if self.block_length >= 1:
+                    self.left_edge_1 = block_seq.pop([0])
+                    self.length_1 = block_seq_length.pop([0])
+                if self.block_length >= 2:
+                    self.left_edge_2 = block_seq.pop([0])
+                    self.length_2 = block_seq_length.pop([0])
+                if self.block_length == 3:
+                    self.left_edge_3 = block_seq.pop([0])
+                    self.length_3 = block_seq_length.pop([0])
+
                 if sack_support == 1 and self.block_length == 1:
                     header_GBN = GBN(type="ack",
                                      options=1,
