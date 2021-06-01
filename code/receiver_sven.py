@@ -151,6 +151,8 @@ class GBNReceiver(Automaton):
         num = pkt.getlayer(GBN).num
         payload = bytes(pkt.getlayer(GBN).payload)
         sack_support = pkt.getlayer(GBN).options
+        if sack_support == 1:
+            log.debug("Here")
 
         # received segment was lost/corrupted in the network
         if random.random() < self.p_data:
