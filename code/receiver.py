@@ -115,7 +115,7 @@ class GBNReceiver(Automaton):
         self.padding_2 = 0
         self.left_edge_3 = 0
         self.length_3 = 0
-        self.block_buffer = {}
+        self.block_buffer = []
 
     def master_filter(self, pkt):
         """Filter packets of interest.
