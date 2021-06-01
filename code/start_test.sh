@@ -12,7 +12,7 @@
 TEST_NUM=4
 
 # Filenames of receiver and sender implementation
-RECEIVER_FILE="receiver_sven.py"
+RECEIVER_FILE="receiver.py"
 SENDER_FILE="sender.py"
 
 ########################################################################################################
