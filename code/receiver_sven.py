@@ -153,8 +153,6 @@ class GBNReceiver(Automaton):
         num = pkt.getlayer(GBN).num
         payload = bytes(pkt.getlayer(GBN).payload)
         sack_support = pkt.getlayer(GBN).options
-        if sack_support == 1:
-            log.debug("Here")
 
         # received segment was lost/corrupted in the network
         if random.random() < self.p_data:
@@ -250,7 +248,11 @@ class GBNReceiver(Automaton):
                             self.length_3 = seq_length
                             seq_length = 1
                             break
-                            
+                    
+                    log.debug("Länge des Block_Buffers", len(self.block_buffer))
+                    log.debug("Left Edge 1", self.left_edge_1)
+                    log.debug("Länge 1",  self.length_1)
+                    
                     if self.block_length == 0:
                         header_GBN = GBN(type="ack",
                                          options=1,
@@ -275,7 +277,7 @@ class GBNReceiver(Automaton):
                                          options=1,
                                          len=0,
                                          hlen=12,
-                                         num=self.next,
+                                         num=self.next,     
                                          win=self.win,
                                          block_length=self.block_length,
                                          left_edge_1=self.left_edge_1,
@@ -309,7 +311,7 @@ class GBNReceiver(Automaton):
                                      num=self.next,
                                      win=self.win)
                                     
-                log.debug(pkt.show())
+                #log.debug(pkt.show())
                 log.debug("Sending ACK: %s", self.next)
                 send(IP(src=self.receiver, dst=self.sender) / header_GBN,
                      verbose=0)
