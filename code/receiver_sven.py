@@ -249,9 +249,9 @@ class GBNReceiver(Automaton):
                             seq_length = 1
                             break
                     
-                    log.debug("Länge des Block_Buffers", len(self.block_buffer))
-                    log.debug("Left Edge 1", self.left_edge_1)
-                    log.debug("Länge 1",  self.length_1)
+                    log.debug("Länge des Block_Buffers %s", len(self.block_buffer))
+                    log.debug("Left Edge 1 %s", self.left_edge_1)
+                    log.debug("Länge 1 %s", self.length_1)
                     
                     if self.block_length == 0:
                         header_GBN = GBN(type="ack",
