@@ -171,7 +171,8 @@ class GBNReceiver(Automaton):
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
-                if(sack_support):
+                
+               if(sack_support):
                     seq_length = 0
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
@@ -211,7 +212,7 @@ class GBNReceiver(Automaton):
                         self.block_length = 1
                         self.left_edge_1 = self.block_buffer[0]
                         self.length_1 = self.block_buffer[1]
-
+                
 
 
                     
@@ -224,7 +225,7 @@ class GBNReceiver(Automaton):
                     #self.end_receiver = True
                     #self.end_num = (num + 1) % 2**self.n_bits
 
-                                # this is the segment with the expected sequence number
+                # this is the segment with the expected sequence number
                 if num == self.next:
                     log.debug("Packet has expected sequence number: %s", num)
 

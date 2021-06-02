@@ -114,7 +114,7 @@ class GBNReceiver(Automaton):
         self.padding_2 = 0
         self.left_edge_3 = 0
         self.length_3 = 0
-        self.block_buffer = []
+        self.ack_buffer = []
 
 
     def master_filter(self, pkt):
@@ -172,8 +172,8 @@ class GBNReceiver(Automaton):
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
-                #add the ack to the block_buffer so we see if we need to send SACK headers
-                self.block_buffer.append(num)
+                #add the ack to the ack_buffer so we see if we need to send SACK headers
+                self.ack_buffer.append(num)
 
                 # check if last packet --> end receiver
                 if len(payload) < self.p_size:
@@ -217,39 +217,55 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
+                '''
+                if num == self.next:
+                    header_GBN = GBN(type="ack",
+                                         options=1,
+                                         len=0,
+                                         hlen=6,
+                                         num=self.next,
+                                         win=self.win)
+
+                    self.ack_buffer.pop[0]
+                    self.next
+
+                '''
+
                 if sack_support == 1:
                     seq_length = 1
-                    log.debug(self.block_buffer)
-                    for i in range(len(self.block_buffer)-1): #asset range>0
+                    self.block_length = 0
+                    log.debug(self.block_length)
+                    log.debug(self.ack_buffer)  
+                    for i in range(len(self.ack_buffer)-1): #asset range>0
                         # going over the correctly received segments
-                        if self.block_buffer[i] + 1 == self.block_buffer[i+1] and self.block_length == 0:
+                        if self.ack_buffer[i] + 1 == self.ack_buffer[i+1] and self.block_length == 0:
                             continue
                         # counting the length of segments that are in order
-                        elif self.block_buffer[i] + 1 == self.block_buffer[i + 1] and self.block_length != 0:
+                        elif self.ack_buffer[i] + 1 == self.ack_buffer[i + 1] and self.block_length != 0:
                             seq_length += 1
                         # first unordered segment 
-                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 0:
+                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 0:
                             self.block_length = 1
-                            self.left_edge_1 = self.block_buffer[i+1]
+                            self.left_edge_1 = self.ack_buffer[i+1]
                         # length of first unordered segments and second unordered segment
-                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 1:
+                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 1:
                             self.length_1 = seq_length
                             seq_length = 1
                             self.block_length = 2
-                            self.left_edge_2 = self.block_buffer[i+1]
+                            self.left_edge_2 = self.ack_buffer[i+1]
                         # length of second unordered segments and third unordered segment
-                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 2:
+                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 2:
                             self.length_2 = seq_length
                             seq_length = 1
                             self.block_length = 3
-                            self.left_edge_3 = self.block_buffer[i+1]
+                            self.left_edge_3 = self.ack_buffer[i+1]
                         # length of third unordered segments and break up
-                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 3:
+                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 3:
                             self.length_3 = seq_length
                             seq_length = 1
                             break
                     
-                    log.debug("Länge des Block_Buffers %s", len(self.block_buffer))
+                    log.debug("Länge des Block_Buffers %s", len(self.ack_buffer))
                     log.debug("Left Edge 1 %s", self.left_edge_1)
                     log.debug("Länge 1 %s", self.length_1)
                     
