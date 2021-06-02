@@ -174,17 +174,17 @@ class GBNReceiver(Automaton):
                 if(sack_support):
                     counter = 0
                     seq_length = 0
-                    buffer_keys = self.buffer.keys()
+                    buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
                     #for i in range("""insert max ACK number"""):
                     #    if i not in buffer_keys:
                     #        print('this ACK is misisng: ' + str(i))
-                    last_key = buffer_keys[0]
+                    previous_key = buffer_keys[0]
                     for key in self.buffer.keys():
                         if key == buffer_keys[0]:
                             continue
-                        if key != last_key + 1:
-                            last_key = key
+                        if key != previous_key + 1:
+                            previous_key = key
                             if counter == 0:
                                 self.block_buffer[counter] = key
                             else:
@@ -194,7 +194,7 @@ class GBNReceiver(Automaton):
                                 counter += 1
                             counter += 1 
                         else: 
-                            last_key = key
+                            previous_key = key
                             seq_length += 1
 
                     if len(self.block_buffer) == 2:
