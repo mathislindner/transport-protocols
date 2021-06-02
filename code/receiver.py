@@ -179,7 +179,8 @@ class GBNReceiver(Automaton):
                     #for i in range("""insert max ACK number"""):
                     #    if i not in buffer_keys:
                     #        print('this ACK is misisng: ' + str(i))
-                    previous_key = buffer_keys[0]
+                    if(len(buffer_keys) < 1):
+                        previous_key = buffer_keys[0]
                     for key in self.buffer.keys():
                         if key == buffer_keys[0]:
                             continue
