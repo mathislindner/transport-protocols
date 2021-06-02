@@ -55,14 +55,14 @@ class GBN(Packet):
                    ByteField("num", 0),
                    ByteField("win", 0),
                    ConditionalField ( ByteField ("block_length", 0), lambda pkt:pkt.options == 1),
-                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 48),
-                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 48),
-                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 72),
-                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.hlen > 72),
-                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.hlen > 72),
-                   ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.hlen > 96),
-                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.hlen > 96),
-                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.hlen > 96)]
+                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.hlen > 12)]
 
 
 # GBN header is coming after the IP header
@@ -174,8 +174,15 @@ class GBNReceiver(Automaton):
                 if(sack_support):
                     counter = 0
                     seq_length = 0
-                    last_key = next(self.buffer)
+                    buffer_keys = self.buffer.keys()
+                    buffer_keys.sort()
+                    #for i in range("""insert max ACK number"""):
+                    #    if i not in buffer_keys:
+                    #        print('this ACK is misisng: ' + str(i))
+                    last_key = buffer_keys[0]
                     for key in self.buffer.keys():
+                        if key == buffer_keys[0]:
+                            continue
                         if key != last_key + 1:
                             last_key = key
                             if counter == 0:
