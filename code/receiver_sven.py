@@ -54,14 +54,14 @@ class GBN(Packet):
                    ByteField("num", 0),
                    ByteField("win", 0),
                    ConditionalField(ByteField("block_length", 0), lambda pkt: pkt.options == 1),
-                   ConditionalField(ByteField("left_edge_1", 0), lambda pkt: pkt.block_length >= 1),
-                   ConditionalField(ByteField("length_of_block_1", 0), lambda pkt: pkt.block_length >= 1),
-                   ConditionalField(ByteField("padding_2", 0), lambda pkt: pkt.block_length >= 2),
-                   ConditionalField(ByteField("left_edge_2", 0), lambda pkt: pkt.block_length >= 2),
-                   ConditionalField(ByteField("length_of_block_2", 0), lambda pkt: pkt.block_length >= 2),
-                   ConditionalField(ByteField("padding_3", 0), lambda pkt: pkt.block_length >= 3),
-                   ConditionalField(ByteField("left_edge_3", 0), lambda pkt: pkt.block_length >= 3),
-                   ConditionalField(ByteField("length_of_block_3", 0), lambda pkt: pkt.block_length >= 3)]
+                   ConditionalField(ByteField("left_edge_1", 0), lambda pkt: pkt.hlen >= 9),
+                   ConditionalField(ByteField("length_of_block_1", 0), lambda pkt: pkt.block_length >= 9),
+                   ConditionalField(ByteField("padding_2", 0), lambda pkt: pkt.block_length >= 12),
+                   ConditionalField(ByteField("left_edge_2", 0), lambda pkt: pkt.block_length >= 12),
+                   ConditionalField(ByteField("length_of_block_2", 0), lambda pkt: pkt.block_length >= 12),
+                   ConditionalField(ByteField("padding_3", 0), lambda pkt: pkt.block_length >= 18),
+                   ConditionalField(ByteField("left_edge_3", 0), lambda pkt: pkt.block_length >= 18),
+                   ConditionalField(ByteField("length_of_block_3", 0), lambda pkt: pkt.block_length >= 18)]
 
 
 # GBN header is coming after the IP header
