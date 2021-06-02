@@ -176,7 +176,12 @@ class GBNReceiver(Automaton):
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
                     current_block = 0
-                    for i in range (max(buffer_keys)):
+                    if len(buffer_keys) > 0:
+                        highest_key_number = max(buffer_keys)
+                    else : 
+                        highest_key_number = 0
+
+                    for i in range (highest_key_number):
                         counter_missing = 0
                         first_missing = i
                         while(i not in buffer_keys):
