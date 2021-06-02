@@ -85,6 +85,7 @@ class GBNReceiver(Automaton):
         end_receiver: Can we close the receiver?
         end_num: Sequence number of last packet + 1
         buffer: buffer to save out of order segments
+        block_list_for_header: jsut like table but in 1d, in other words: reshape(6)
     """
 
     def parse_args(self, receiver, sender, nbits, out_file, window, p_data,
@@ -107,6 +108,7 @@ class GBNReceiver(Automaton):
         self.end_num = -1
         self.buffer = {}
         self.block_list_for_header = []
+        self.correctly_received = []
         
     def fill_SACK_header_from_list(self):
         """
@@ -114,7 +116,7 @@ class GBNReceiver(Automaton):
         returns: a header with SACK 
         """
         block_list = self.block_list_for_header #to not work with the object directly
-        block_number = int(len(block_list)/3)
+        block_number = int(len(block_list)/2)
         if block_number < 1:
             header_GBN = GBN(type="ack",
                                 options=1,
@@ -142,23 +144,23 @@ class GBNReceiver(Automaton):
                                 block_number = block_number,
                                 left_edge_1 = block_list[0],
                                 length_1 = block_list[1],
-                                padding_1=0,
+                                padding_1=1,
                                 left_edge_2=block_list[2],
                                 length_2=block_list[3])
         else:
             header_GBN = GBN(type="ack",
                                 options=1,
                                 len=0,
-                                hlen=18,
+                                hlen=15,
                                 num=self.next,
                                 win=self.win,
                                 block_number = block_number,
                                 left_edge_1 = block_list[0],
                                 length_1 = block_list[1],
-                                padding_1=0,
+                                padding_1=1,
                                 left_edge_2=block_list[2],
                                 length_2=block_list[3],
-                                padding_2=0,
+                                padding_2=1,
                                 left_edge_3=block_list[4],
                                 length_3=block_list[5])
         return header_GBN
@@ -216,29 +218,7 @@ class GBNReceiver(Automaton):
 
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
-            if ptype == 0:
-                if(sack_support == 1):
-                    self.block_list_for_header = []
-                    buffer_keys = list(self.buffer.keys())
-                    buffer_keys.sort()
-                    current_block = 0
-                    if len(buffer_keys) > 0:
-                        highest_key_number = max(buffer_keys)
-                    else : 
-                        highest_key_number = 0
-
-                    for i in range (highest_key_number):
-                        counter_missing = 0
-                        first_missing = i
-                        while(i not in buffer_keys):
-                            counter_missing += 1
-                        if counter_missing > 0:
-                            self.block_list_for_header[current_block].append(first_missing)
-                            self.block_list_for_header[current_block].append(counter_missing)
-                            current_block += 1
-                        if (current_block > 2):
-                            break
-                    
+            if ptype == 0:                  
                     
 
                 # check if last packet --> end receiver
@@ -270,6 +250,37 @@ class GBNReceiver(Automaton):
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
 
+                if(sack_support == 1):
+                    self.block_list_for_header = [] #basically table but in an array
+                    buffer_keys = list(self.buffer.keys())
+                    buffer_keys.sort()
+                    log.debug('which ack are in buffer: '+ str(buffer_keys))
+                    log.debug('recevied all packets successfully until: ' + str(self.next))
+                    highest_key_number = 0
+                    if len(buffer_keys) > 0:
+                        highest_key_number = max(buffer_keys)
+                    current_block = 0
+                    i = self.next
+                    new_block = False
+                    while (i < highest_key_number +1 ): #iterate from last ack to greatest
+                        if (current_block > 2): #filled 3 block buffer
+                            break
+                        counter = 1 #how many packets are after the first
+                        left_received = i #saving to remmeber first value in buffer
+                        if i in buffer_keys:
+                            new_block = True #we ll need to say what we ve recevied
+                            i = i + 1 
+                            while (i in buffer_keys):
+                                counter +=1
+                                i = i + 1 
+                        if new_block:
+                            self.block_list_for_header.append(left_received)
+                            self.block_list_for_header.append(counter)
+                            current_block += 1
+                            new_block = False
+                        i = i + 1
+                    log.debug("block_ list for header ")
+                    log.debug(self.block_list_for_header)
             else:
                 # we received an ACK while we are supposed to receive only
                 # data segments
@@ -301,8 +312,14 @@ class GBNReceiver(Automaton):
                 # last packet received and all ACKs successfully transmitted
                 # --> close receiver
                 if self.end_receiver and self.end_num == self.next:
-                    raise self.END()
+                    log.debug("ending")
+                    #raise self.END()
+                    ###########################################################################################
 
+
+
+
+                    ###########################################################################################
             # transition to WAIT_SEGMENT to receive next segment
             raise self.WAIT_SEGMENT()
 
