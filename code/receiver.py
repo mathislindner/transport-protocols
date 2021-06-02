@@ -221,7 +221,7 @@ class GBNReceiver(Automaton):
                 if len(payload) < self.p_size:
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
-
+                log.debug("end_receiver %s", self.end_receiver)
                                 # this is the segment with the expected sequence number
                 if num == self.next:
                     log.debug("Packet has expected sequence number: %s", num)
