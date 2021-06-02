@@ -167,9 +167,9 @@ class GBNReceiver(Automaton):
 
                 # this was not the expected segment
                 else:
-                    self.buffer[num] = payload
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
+                    self.buffer[num] = payload
 
             else:
                 # we received an ACK while we are supposed to receive only
