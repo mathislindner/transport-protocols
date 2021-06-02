@@ -318,7 +318,7 @@ class GBNReceiver(Automaton):
 
                 # last packet received and all ACKs successfully transmitted
                 # --> close receiver
-                if self.end_receiver and self.end_num == self.next:
+                if self.end_receiver and self.end_num == self.next and False:
                     raise self.END()
 
             # transition to WAIT_SEGMENT to receive next segment
