@@ -12,7 +12,7 @@ from scapy.config import conf
 from scapy.layers.inet import IP, ICMP
 from scapy.packet import Packet, bind_layers
 from scapy.fields import (BitEnumField, BitField, ShortField, ByteField,
-                          ConditionalField)
+                          ConditionalField) 
 from scapy.automaton import Automaton, ATMT
 import queue as que
 
