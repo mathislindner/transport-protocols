@@ -172,7 +172,7 @@ class GBNReceiver(Automaton):
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
                 if(sack_support == 1):
-                    self.block_buffer = [] # [[],[],[]] SACK table
+                    self.block_buffer = []
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
                     current_block = 0
