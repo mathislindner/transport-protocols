@@ -303,7 +303,7 @@ class GBNReceiver(Automaton):
                                  padding_2 = self.padding_2,
                                  left_edge_3 = self.left_edge_3,
                                  length_3 = self.length_3)
-                elif sack support == 1:
+                elif sack_support == 1:
                     header_GBN = GBN(type="ack",
                                  options=1,
                                  len=0,
