@@ -176,7 +176,7 @@ class GBNSender(Automaton):
             # make sure that you can handle a sequence number overflow     #
             ################################################################
 
-            if self.Q_4_2:
+            if self.Q_4_2 == 1:
                 if ack in self.acks_received:
                     self.acks_received[ack] += 1
                     if self.acks_received[ack] > 2:
@@ -186,6 +186,10 @@ class GBNSender(Automaton):
                         self.acks_received[ack] = 0
                 else:
                     self.acks_received[ack] = 1
+            
+            if self.SACK == 1:
+
+                
 
             while self.unack != ack:
                 if self.unack in self.buffer:
