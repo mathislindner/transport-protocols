@@ -221,9 +221,8 @@ class GBNReceiver(Automaton):
             else:
                 if sack_support == 1:
                     seq_length = 1
-                    len(self.block_buffer)
-                    
-                    for i in range(len(self.block_buffer)-1):
+                    log.debug(self.block_buffer)
+                    for i in range(len(self.block_buffer)-1): #asset range>0
                         # going over the correctly received segments
                         if self.block_buffer[i] + 1 == self.block_buffer[i+1] and self.block_length == 0:
                             continue
@@ -251,8 +250,16 @@ class GBNReceiver(Automaton):
                             self.length_3 = seq_length
                             seq_length = 1
                             break
+                            
+                    if self.block_length == 0:
+                        header_GBN = GBN(type="ack",
+                                         options=1,
+                                         len=0,
+                                         hlen=6,
+                                         num=self.next,
+                                         win=self.win)
 
-                    if self.block_length == 1:
+                    elif self.block_length == 1:
                         header_GBN = GBN(type="ack",
                                          options=1,
                                          len=0,
@@ -277,7 +284,7 @@ class GBNReceiver(Automaton):
                                          left_edge_2=self.left_edge_2,
                                          length_2=self.length_2)
 
-                    elif self.block_length == 3:
+                    elif self.block_length > 2:
                         header_GBN = GBN(type="ack",
                                          options=1,
                                          len=0,
