@@ -116,6 +116,7 @@ class GBNReceiver(Automaton):
         self.length_of_block_3 = 0
         self.block_buffer = []
 
+
     def master_filter(self, pkt):
         """Filter packets of interest.
 
@@ -142,7 +143,8 @@ class GBNReceiver(Automaton):
 
     @ATMT.receive_condition(WAIT_SEGMENT)
     def packet_in(self, pkt):
-        """Transition: Packet is coming in from the sender."""
+        """Transition: Packet 
+        is coming in from the sender."""
         raise self.DATA_IN(pkt)
 
     @ATMT.state()
@@ -173,7 +175,7 @@ class GBNReceiver(Automaton):
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
                 #add the ack to the block_buffer so we see if we need to send SACK headers
-                self.block_buffer.append(ack)
+                self.block_buffer.append(num)
 
                 # check if last packet --> end receiver
                 if len(payload) < self.p_size:
@@ -219,34 +221,33 @@ class GBNReceiver(Automaton):
             else:
                 if sack_support == 1:
                     seq_length = 1
-                    block_seq = []
-                    block_seq_length =[]
-
-                    for i in len(self.block_buffer)-1:
+                    len(self.block_buffer)
+                    
+                    for i in range(len(self.block_buffer)-1):
                         # going over the correctly received segments
-                        if self.block_buffer[i] + 1 == self.lock_buffer[i+1] and self.block_length == 0:
+                        if self.block_buffer[i] + 1 == self.block_buffer[i+1] and self.block_length == 0:
                             continue
                         # counting the length of segments that are in order
-                        elif self.block_buffer[i] + 1 == self.lock_buffer[i + 1] and self.block_length != 0:
+                        elif self.block_buffer[i] + 1 == self.block_buffer[i + 1] and self.block_length != 0:
                             seq_length += 1
                         # first unordered segment 
-                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 0:
+                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 0:
                             self.block_length = 1
-                            self.left_edge_1 = self.lock_buffer[i+1]
+                            self.left_edge_1 = self.block_buffer[i+1]
                         # length of first unordered segments and second unordered segment
-                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 1:
+                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 1:
                             self.length_1 = seq_length
                             seq_length = 1
                             self.block_length = 2
-                            self.left_edge_2 = self.lock_buffer[i+1]
+                            self.left_edge_2 = self.block_buffer[i+1]
                         # length of second unordered segments and third unordered segment
-                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 2:
+                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 2:
                             self.length_2 = seq_length
                             seq_length = 1
-                            self.block_length[i]
-                            self.left_edge_3 = self.lock_buffer[i+1]
+                            self.block_length = 3
+                            self.left_edge_3 = self.block_buffer[i+1]
                         # length of third unordered segments and break up
-                        elif self.block_buffer[i] + 1 != self.lock_buffer[i+1] and self.block_length == 3:
+                        elif self.block_buffer[i] + 1 != self.block_buffer[i+1] and self.block_length == 3:
                             self.length_3 = seq_length
                             seq_length = 1
                             break
