@@ -171,13 +171,26 @@ class GBNReceiver(Automaton):
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
-                if(sack_support):
-                    seq_length = 0
+                if(sack_support == 1):
+                    self.block_buffer = [] # [[],[],[]] SACK table
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
-                    #for i in range("""insert max ACK number"""):
-                    #    if i not in buffer_keys:
-                    #        print('this ACK is misisng: ' + str(i))
+                    current_block = 0
+                    for i in range (max(buffer_keys)):
+                        counter_missing = 0
+                        first_missing = i
+                        while(i not in buffer_keys):
+                            counter_missing += 1
+                        if counter_missing > 0:
+                            self.block_buffer[current_block].append(first_missing)
+                            self.block_buffer[current_block].append(counter_missing)
+                            current_block += 1
+                        if (current_block > 2):
+                            break
+
+                            
+
+                    """
                     if(len(buffer_keys) > 0):
                         previous_key = buffer_keys[0]
                     for key in self.buffer.keys():
@@ -194,7 +207,7 @@ class GBNReceiver(Automaton):
                         else: 
                             previous_key = key
                             seq_length += 1
-
+                    """
                     if len(self.block_buffer) == 2:
                         self.block_length = 1
                         self.left_edge_1 = self.block_buffer[0]
@@ -214,7 +227,7 @@ class GBNReceiver(Automaton):
                         self.left_edge_3 = self.block_buffer[4]
                         self.length_3 = self.block_buffer[5]
 
-
+                    
                     
 
                 # check if last packet --> end receiver
