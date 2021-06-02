@@ -199,19 +199,16 @@ class GBNReceiver(Automaton):
                             seq_length += 1
 
                     if len(self.block_buffer) == 2:
-                        log.debug("blocksize: 1")
                         self.block_length = 1
                         self.left_edge_1 = self.block_buffer[0]
                         self.length_1 = self.block_buffer[1]
                     elif len(self.block_buffer) == 4:
-                        log.debug("blocksize: 2")
                         self.block_length = 2
                         self.left_edge_1 = self.block_buffer[0]
                         self.length_1 = self.block_buffer[1]
                         self.left_edge_2 = self.block_buffer[2]
                         self.length_2 = self.block_buffer[3]
                     elif len(self.block_buffer) >= 6:
-                        log.debug("blocksize: 3")
                         self.block_length = 3
                         self.left_edge_1 = self.block_buffer[0]
                         self.length_1 = self.block_buffer[1]
@@ -219,6 +216,7 @@ class GBNReceiver(Automaton):
                         self.length_2 = self.block_buffer[3]
                         self.left_edge_3 = self.block_buffer[4]
                         self.length_3 = self.block_buffer[5]
+
 
                     
 
@@ -305,7 +303,13 @@ class GBNReceiver(Automaton):
                                  padding_2 = self.padding_2,
                                  left_edge_3 = self.left_edge_3,
                                  length_3 = self.length_3)
-
+                elif sack support == 1:
+                    header_GBN = GBN(type="ack",
+                                 options=1,
+                                 len=0,
+                                 hlen=6,
+                                 num=self.next,
+                                 win=self.win)
                 else:
                     header_GBN = GBN(type="ack",
                                      options=0,
