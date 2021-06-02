@@ -108,12 +108,12 @@ class GBNReceiver(Automaton):
         self.buffer = {}
         self.block_list_for_header = []
         
-    def fill_SACK_header_from_list(self, block_list):
+    def fill_SACK_header_from_list(self):
         """
         input: list for SACK
         returns: a header with SACK 
         """
-        # if block number <4 or <6 fill block list with 0...
+        block_list = self.block_list_for_header #to not work with the object directly
         block_number = int(len(block_list)/3)
         if block_number < 1:
             header_GBN = GBN(type="ack",
@@ -161,8 +161,6 @@ class GBNReceiver(Automaton):
                                 padding_2=0,
                                 left_edge_3=block_list[4],
                                 length_3=block_list[5])
-        # HEADER needs specific size
-        #log.debug(block_list)
         return header_GBN
 
     def master_filter(self, pkt):
@@ -286,7 +284,7 @@ class GBNReceiver(Automaton):
             # the ACK will be received correctly
             else:
                 if sack_support == 1:
-                    header_GBN = self.fill_SACK_header_from_list(self.block_list_for_header)
+                    header_GBN = self.fill_SACK_header_from_list()
 
                 else:
                     header_GBN = GBN(type="ack",
