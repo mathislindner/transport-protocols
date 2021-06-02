@@ -107,13 +107,13 @@ class GBNReceiver(Automaton):
         self.buffer = {}
         self.block_length = 0
         self.left_edge_1 = 0
-        self.length_of_block__1 = 0
+        self.length_1 = 0
         self.padding_1 = 0
         self.left_edge_2 = 0
-        self.length_of_block_2 = 0
+        self.length_2 = 0
         self.padding_2 = 0
         self.left_edge_3 = 0
-        self.length_of_block_3 = 0
+        self.length_3 = 0
         self.block_buffer = []
 
 
