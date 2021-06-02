@@ -186,10 +186,6 @@ class GBNSender(Automaton):
                         self.acks_received[ack] = 0
                 else:
                     self.acks_received[ack] = 1
-            
-            if self.SACK == 1:
-
-                
 
             while self.unack != ack:
                 if self.unack in self.buffer:
