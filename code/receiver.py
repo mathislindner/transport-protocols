@@ -175,9 +175,6 @@ class GBNReceiver(Automaton):
                     seq_length = 0
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
-                    #for i in range("""insert max ACK number"""):
-                    #    if i not in buffer_keys:
-                    #        print('this ACK is misisng: ' + str(i))
                     if(len(buffer_keys) > 0):
                         previous_key = buffer_keys[0]
                     for key in self.buffer.keys():
@@ -195,17 +192,8 @@ class GBNReceiver(Automaton):
                             previous_key = key
                             seq_length += 1
 
-                    if len(self.block_buffer) == 2:
-                        self.block_length = 1
-                        self.left_edge_1 = self.block_buffer[0]
-                        self.length_1 = self.block_buffer[1]
-                    elif len(self.block_buffer) == 4:
-                        self.block_length = 2
-                        self.left_edge_1 = self.block_buffer[0]
-                        self.length_1 = self.block_buffer[1]
-                        self.left_edge_2 = self.block_buffer[2]
-                        self.length_2 = self.block_buffer[3]
-                    elif len(self.block_buffer) >= 6:
+
+                    if len(self.block_buffer) >= 5:
                         self.block_length = 3
                         self.left_edge_1 = self.block_buffer[0]
                         self.length_1 = self.block_buffer[1]
@@ -213,6 +201,20 @@ class GBNReceiver(Automaton):
                         self.length_2 = self.block_buffer[3]
                         self.left_edge_3 = self.block_buffer[4]
                         self.length_3 = self.block_buffer[5]
+                    elif len(self.block_buffer) >= 3:
+                        self.block_length = 2
+                        self.left_edge_1 = self.block_buffer[0]
+                        self.length_1 = self.block_buffer[1]
+                        self.left_edge_2 = self.block_buffer[2]
+                        self.length_2 = self.block_buffer[3]
+                    elif len(self.block_buffer) >= 1:
+                        self.block_length = 1
+                        self.left_edge_1 = self.block_buffer[0]
+                        self.length_1 = self.block_buffer[1]
+
+
+
+                    
 
 
                     
