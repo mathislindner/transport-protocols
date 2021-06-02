@@ -218,8 +218,11 @@ class GBNReceiver(Automaton):
                     
 
                 # check if last packet --> end receiver
+                counter = 0
                 if len(payload) < self.p_size:
-                    self.end_receiver = True
+                    if counter == 0:
+                        self.end_receiver = True
+                        counter = 1
                     self.end_num = (num + 1) % 2**self.n_bits
                 log.debug("end_receiver %s", self.end_receiver)
                                 # this is the segment with the expected sequence number
