@@ -172,7 +172,6 @@ class GBNReceiver(Automaton):
             ptype = pkt.getlayer(GBN).type
             if ptype == 0:
                 if(sack_support):
-                    counter = 0
                     seq_length = 0
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
@@ -186,14 +185,12 @@ class GBNReceiver(Automaton):
                             continue
                         if key != previous_key + 1:
                             previous_key = key
-                            if counter == 0:
-                                self.block_buffer[counter] = key
+                            if len(self.block_buffer) < 1:
+                                self.block_buffer.append(key)
                             else:
-                                self.block_buffer[counter] = seq_length
+                                self.block_buffer.append(seq_length)
                                 seq_length = 0
-                                self.block_buffer[counter + 1] = key
-                                counter += 1
-                            counter += 1 
+                                self.block_buffer.append(key) 
                         else: 
                             previous_key = key
                             seq_length += 1
