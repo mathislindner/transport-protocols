@@ -187,6 +187,7 @@ class GBNReceiver(Automaton):
                                 counter += 1
                             counter += 1 
                         else: 
+                            last_key = key
                             seq_length += 1
 
                     if len(self.block_buffer) == 2:
@@ -358,3 +359,4 @@ if __name__ == "__main__":
                                output_file, args.window_size, args.data_l,
                                args.ack_l, size)
     # start automaton
+GBN_receiver.run()

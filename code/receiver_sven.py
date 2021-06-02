@@ -358,3 +358,4 @@ if __name__ == "__main__":
                                output_file, args.window_size, args.data_l,
                                args.ack_l, size)
     # start automaton
+    GBN_receiver.run()
