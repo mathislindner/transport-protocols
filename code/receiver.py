@@ -223,6 +223,8 @@ class GBNReceiver(Automaton):
 
                 # check if last packet --> end receiver
                 if len(payload) < self.p_size:
+                    log.debug("payload %s", len(payload))
+                    log.debug("p_size %s", self.p_size)
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
