@@ -264,40 +264,7 @@ class GBNReceiver(Automaton):
                             if buffer_keys[i]% (2**self.n_bits) != (buffer_keys[i-1] + 1)% (2**self.n_bits):
                                 self.block_list.append(buffer_keys[i-1])
                                 in_block = False
-                    
-
-                    
-                    
-                    '''
-                    buffer_keys.sort()
-                    log.debug('which ack are in buffer: '+ str(buffer_keys))
-                    log.debug('recevied all packets successfully until: ' + str(self.next))
-                    highest_key_number = 0
-                    if len(buffer_keys) > 0:
-                        highest_key_number = max(buffer_keys)
-                    current_block = 0
-                    i = self.next
-                    new_block = False
-                    while (i < highest_key_number): #iterate from last ack to greatest
-                        if (current_block > 2): #filled 3 block buffer
-                            break
-                        counter = 1 #how many packets are after the first
-                        left_received = i #saving to remmeber first value in buffer
-                        if i in buffer_keys:
-                            new_block = True #we ll need to say what we ve recevied
-                            i = int((i + 1) % 2 ** self.n_bits) 
-                            while (i in buffer_keys):
-                                counter +=1
-                                i = int((i + 1) % 2 ** self.n_bits) 
-                        if new_block:
-                            self.block_list_for_header.append(left_received)
-                            self.block_list_for_header.append(counter)
-                            current_block += 1
-                            new_block = False
-                        i = int((i + 1) % 2 ** self.n_bits) 
-                    log.debug("block_ list for header ")
-                    log.debug(self.block_list_for_header)
-                    '''
+                
             else:
                 # we received an ACK while we are supposed to receive only
                 # data segments
