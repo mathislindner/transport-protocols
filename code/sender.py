@@ -40,7 +40,16 @@ class GBN(Packet):
                    ShortField("len", None),
                    ByteField("hlen", 0),
                    ByteField("num", 0),
-                   ByteField("win", 0)]
+                   ByteField("win", 0),
+                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.hlen > 12)]
 
 
 # GBN header is coming after the IP header
@@ -88,6 +97,7 @@ class GBNSender(Automaton):
         self.SACK = Q_4_3
         self.Q_4_4 = Q_4_4
         self.acks_received = {} # ack number: received times
+        self.sack_buffer = []
 
     def master_filter(self, pkt):
         """Filter packets of interest.
@@ -189,6 +199,42 @@ class GBNSender(Automaton):
                         self.acks_received[ack] = 0
                 else:
                     self.acks_received[ack] = 1
+
+            if self.SACK:
+                sack_support = pkt.getlayer(GBN).options
+                block_length = pkt.getlayer(GBN).block_length
+                if sack_support:
+                    if block_length == 1:
+                        i = self.unack
+                        while i < pkt.getlayer(GBN).left_edge_1:
+                            self.sack_buffer.append(i)
+                            i+=1
+                    if block length == 2:
+                        i = self.unack
+                        while i < pkt.getlayer(GBN).left_edge_1:
+                            self.sack_buffer.append(i)
+                            i+=1
+                        k = pkt.getlayer(GBN).left_edge_1 + length_1
+                        while k < pkt.getlayer(GBN).left_edge_2:
+                            self.sack_buffer.append(k)
+                    if block_length == 3:
+                        i = self.unack
+                        while i < pkt.getlayer(GBN).left_edge_1:
+                            self.sack_buffer.append(i)
+                            i+=1
+                        k = pkt.getlayer(GBN).left_edge_1 + length_1
+                        while k < pkt.getlayer(GBN).left_edge_2:
+                            self.sack_buffer.append(k)
+                        s = pkt.getlayer(GBN).left_edge_2 + length_2
+                        while s < pkt.getlayer(GBN).left_edge_3:
+                            self.sack_buffer.append(s)
+                for n in self.sack_buffer:
+                    payload = self.buffer[self.sack_buffer[n]]
+                    payload_len = len(self.buffer[self.sack_buffer[n])
+                    header_GBN = GBN(type=0,len = payload_len, hlen=6, num=n, win=self.win) #hlen = sth+sth as vars and not just 48?
+                    send(IP(src = self.sender, dst = self.receiver)/header_GBN/payload)
+
+
 
             while self.unack != ack:
                 if self.unack in self.buffer:

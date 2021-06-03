@@ -40,7 +40,16 @@ class GBN(Packet):
                    ShortField("len", None),
                    ByteField("hlen", 0),
                    ByteField("num", 0),
-                   ByteField("win", 0)]
+                   ByteField("win", 0),
+                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.hlen > 12)]
 
 
 # GBN header is coming after the IP header
@@ -61,6 +70,7 @@ class GBNSender(Automaton):
         unack: First unacked segment
         receiver_win: Current window advertised by receiver, initialized with
                       sender window size
+        acks_received: dictonary of all acks_received key: ack, value: amount ack got received
         Q_4_2: Is Selective Repeat used?
         SACK: Is SACK used?
         Q_4_4: Is Congestion Control used?
@@ -186,14 +196,41 @@ class GBNSender(Automaton):
                         self.acks_received[ack] = 0
                 else:
                     self.acks_received[ack] = 1
-
+            
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
-                if self.unack == 2**self.n_bits -1:
-                    self.unack = 0
-                else:
-                    self.unack = self.unack + 1
+                    self.unack = (self.unack + 1) % 2**self.n_bits
+
+            if self.SACK == 1:
+                block_length = pkt.getlayer(GBN).block_number
+                pointer = self.unack
+                if block_length > 0:
+                    pointer_1 = self.unack
+                    for i in self.win:
+                        if pointer_1 + i in self.buffer.keys():
+                            header_GBN = GBN(type=0, len=len(self.buffer[pointer_1+i]), hlen=6, num=pointer_1+i, win=self.win)
+                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[pointer_1+i])
+                            if pointer_1 + i == pkt.getlayer(GBN).left_edge_1:
+                                break
+
+                if block_length > 1:
+                    pointer_2 = pkt.getlayer(GBN).left_edge_1 + pkt.getlayer(GBN).length_1
+                    for i in self.buffer:
+                        if pointer_2 + i in self.buffer.keys():
+                            header_GBN = GBN(type=0, len=len(self.buffer[pointer_2+i]), hlen=6, num=pointer_2+i, win=self.win)
+                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[pointer_2+i]
+                            if (pointer_2 + i) == pkt.getlayer(GBN).left_edge_2:
+                                break
+
+                if block_length > 2:
+                    pointer_3 = pkt.getlayer(GBN).left_edge_2 + pkt.getlayer(GBN).length_2
+                    for i in self.buffer:
+                        if pointer_3 + i in self.buffer.keys():
+                            header_GBN = GBN(type=0, len=len(self.buffer[pointer_3+i]), hlen=6, num=pointer_3+i, win=self.win)
+                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[pointer_3+i]
+                            if pointer_3 + i == pkt.getlayer(GBN).left_edge_3:
+                                break
 
         # back to SEND state
         raise self.SEND()

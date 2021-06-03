@@ -175,7 +175,7 @@ class GBNSender(Automaton):
             pass
         else:
             log.debug("Received ACK %s", pkt.getlayer(GBN).num)
-
+            
             # set the receiver window size to the received value
             self.receiver_win = pkt.getlayer(GBN).win
 
