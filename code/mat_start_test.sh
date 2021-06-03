@@ -13,7 +13,7 @@ TEST_NUM=5
 
 # Filenames of receiver and sender implementation
 RECEIVER_FILE="receiver_mat.py"
-SENDER_FILE="sender_mat.py"
+SENDER_FILE="TEST_5_sender_mat.py"
 
 ########################################################################################################
 # END changeable parameters                                                                            #

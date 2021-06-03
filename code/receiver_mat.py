@@ -254,6 +254,7 @@ class GBNReceiver(Automaton):
                     self.block_list_for_header = [] #basically table but in an array
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
+                    ####################################somehow apply the window to the keys
                     log.debug('which ack are in buffer: '+ str(buffer_keys))
                     log.debug('recevied all packets successfully until: ' + str(self.next))
                     highest_key_number = 0

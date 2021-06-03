@@ -124,7 +124,7 @@ class GBNSender(Automaton):
 
                 # add the current segment to the buffer
                 self.buffer[self.current] = payload
-                log.debug("Current buffer size test: %s", len(self.buffer))
+                #log.debug("Current buffer size test: %s", len(self.buffer))
 
                 ###############################################################
                 # TODO:                                                       #
@@ -134,8 +134,17 @@ class GBNSender(Automaton):
                 ###############################################################
 
                 header_GBN = GBN(type = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
-
+                send(IP(options=1,src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
+                #        ^^^^^^
+                #
+                #
+                #
+                #
+                #add in Header SACK support?
+                #
+                #
+                #
+                #
 
                 # sequence number of next packet
                 self.current = int((self.current + 1) % 2**self.n_bits)
@@ -159,26 +168,15 @@ class GBNSender(Automaton):
     @ATMT.state()
     def ACK_IN(self, pkt):
         """State for received ACK."""
-        sack_support = pkt.getlayer(GBN).options
         # check if type is ACK
         if pkt.getlayer(GBN).type == 0:
             log.error("Error: data type received instead of ACK %s", pkt)
             raise self.SEND()
-
-        elif sack_support == 1:
-            #extract the SACK information back to a []
-            log.debug(self.SACK)
-            #check buffer to see non ACKed
-            #create a [] of data that needs to be retransmitted
-            #for packets in lost_packets: sent_packet()
-            #############################################################
-            pass
         else:
             log.debug("Received ACK %s", pkt.getlayer(GBN).num)
 
             # set the receiver window size to the received value
             self.receiver_win = pkt.getlayer(GBN).win
-
             ack = pkt.getlayer(GBN).num
 
             ################################################################
@@ -186,7 +184,7 @@ class GBNSender(Automaton):
             # remove all the acknowledged sequence numbers from the buffer #
             # make sure that you can handle a sequence number overflow     #
             ################################################################
-
+            sack_support = pkt.getlayer(GBN).options
 
             
             if self.Q_4_2:
@@ -200,6 +198,15 @@ class GBNSender(Automaton):
                 else:
                     self.acks_received[ack] = 1
 
+            elif sack_support == 1:
+                #extract the SACK information back to a []
+                log.debug('this is the SACK : ')
+                log.debug(self.SACK)
+                #check buffer to see non ACKed
+                #create a [] of data that needs to be retransmitted
+                #for packets in lost_packets: sent_packet()
+                #############################################################
+                pass
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
@@ -229,7 +236,7 @@ class GBNSender(Automaton):
 
         for k in self.buffer.keys():
             payload_len = len(self.buffer[k])
-            header_GBN = GBN(type=0,len = payload_len, hlen=6, num=k, win=self.win) #hlen = sth+sth as vars and not just 48?
+            header_GBN = GBN(type=0,len = payload_len, hlen=6, num=k, win=self.win)
             send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
 
 
