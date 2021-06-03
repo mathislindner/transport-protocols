@@ -115,7 +115,7 @@ class GBNReceiver(Automaton):
         input: list for SACK
         returns: a header with SACK 
         """
-        block_number = min(3, int(len(block_list)/2))
+        block_number = min(3, int(len(self.block_list)/2))
         if block_number < 1:
             header_GBN = GBN(type="ack",
                                 options=1,
