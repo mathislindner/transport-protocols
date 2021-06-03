@@ -3,6 +3,7 @@
 # Disable pylint rules which are incompatible with our naming conventions
 # pylint: disable=C0103,W0221,W0201,R0902,R0913,R0201
 
+
 import os
 import random
 import logging
@@ -12,7 +13,7 @@ from scapy.config import conf
 from scapy.layers.inet import IP, ICMP
 from scapy.packet import Packet, bind_layers
 from scapy.fields import (BitEnumField, BitField, ShortField, ByteField,
-                          ConditionalField) 
+                          ConditionalField)
 from scapy.automaton import Automaton, ATMT
 import queue as que
 
@@ -38,13 +39,13 @@ class GBN(Packet):
         win: sender/receiver window size
         block_length: indecates the how many additional blocks will be used
         left_edge_1: first ack of first sequence
-        length_1: number of acks in the first sequence
+        length_1:
         padding_1: --
         left_edge_2: first ack of second sequence
-        length_2: number of acks in the second sequence
+        length_2:
         padding_2: --
         left_edge_3: first ack of third sequence
-        length_3: number of acks in the third sequence
+        length_3:
     """
     name = 'GBN'
     fields_desc = [BitEnumField("type", 0, 1, {0: "data", 1: "ack"}),
@@ -53,15 +54,15 @@ class GBN(Packet):
                    ByteField("hlen", 0),
                    ByteField("num", 0),
                    ByteField("win", 0),
-                   ConditionalField(ByteField("block_length", 0), lambda pkt: pkt.options == 1),
-                   ConditionalField(ByteField("left_edge_1", 0), lambda pkt: pkt.hlen >= 9),
-                   ConditionalField(ByteField("length_of_block_1", 0), lambda pkt: pkt.block_length >= 9),
-                   ConditionalField(ByteField("padding_2", 0), lambda pkt: pkt.block_length >= 12),
-                   ConditionalField(ByteField("left_edge_2", 0), lambda pkt: pkt.block_length >= 12),
-                   ConditionalField(ByteField("length_of_block_2", 0), lambda pkt: pkt.block_length >= 12),
-                   ConditionalField(ByteField("padding_3", 0), lambda pkt: pkt.block_length >= 18),
-                   ConditionalField(ByteField("left_edge_3", 0), lambda pkt: pkt.block_length >= 18),
-                   ConditionalField(ByteField("length_of_block_3", 0), lambda pkt: pkt.block_length >= 18)]
+                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.hlen > 12)]
 
 
 # GBN header is coming after the IP header
@@ -84,6 +85,7 @@ class GBNReceiver(Automaton):
         end_receiver: Can we close the receiver?
         end_num: Sequence number of last packet + 1
         buffer: buffer to save out of order segments
+        block_list_for_header: just like table but in 1d, in other words: reshape(6)
     """
 
     def parse_args(self, receiver, sender, nbits, out_file, window, p_data,
@@ -105,17 +107,63 @@ class GBNReceiver(Automaton):
         self.end_receiver = False
         self.end_num = -1
         self.buffer = {}
-        self.block_length = 0
-        self.left_edge_1 = 0
-        self.length_1 = 0
-        self.padding_1 = 0
-        self.left_edge_2 = 0
-        self.length_2 = 0
-        self.padding_2 = 0
-        self.left_edge_3 = 0
-        self.length_3 = 0
-        self.ack_buffer = []
-
+        self.block_list_for_header = []
+        self.correctly_received = []
+        
+    def fill_SACK_header_from_list(self):
+        """
+        input: list for SACK
+        returns: a header with SACK 
+        """
+        block_list = self.block_list_for_header #to not work with the object directly
+        block_number = int(len(block_list)/2)
+        if block_number < 1:
+            header_GBN = GBN(type="ack",
+                                options=1,
+                                len=0,
+                                hlen=6,
+                                num=self.next,
+                                win=self.win)
+        elif block_number < 2:
+            header_GBN = GBN(type="ack",
+                                options=1,
+                                len=0,
+                                hlen=9,
+                                num=self.next,
+                                win=self.win,
+                                block_number = block_number,
+                                left_edge_1 = block_list[0],
+                                length_1 = block_list[1])
+        elif block_number < 3:
+            header_GBN = GBN(type="ack",
+                                options=1,
+                                len=0,
+                                hlen=12,
+                                num=self.next,
+                                win=self.win,
+                                block_number = block_number,
+                                left_edge_1 = block_list[0],
+                                length_1 = block_list[1],
+                                padding_1=1,
+                                left_edge_2=block_list[2],
+                                length_2=block_list[3])
+        else:
+            header_GBN = GBN(type="ack",
+                                options=1,
+                                len=0,
+                                hlen=15,
+                                num=self.next,
+                                win=self.win,
+                                block_number = block_number,
+                                left_edge_1 = block_list[0],
+                                length_1 = block_list[1],
+                                padding_1=1,
+                                left_edge_2=block_list[2],
+                                length_2=block_list[3],
+                                padding_2=1,
+                                left_edge_3=block_list[4],
+                                length_3=block_list[5])
+        return header_GBN
 
     def master_filter(self, pkt):
         """Filter packets of interest.
@@ -143,8 +191,7 @@ class GBNReceiver(Automaton):
 
     @ATMT.receive_condition(WAIT_SEGMENT)
     def packet_in(self, pkt):
-        """Transition: Packet 
-        is coming in from the sender."""
+        """Transition: Packet is coming in from the sender."""
         raise self.DATA_IN(pkt)
 
     @ATMT.state()
@@ -171,16 +218,15 @@ class GBNReceiver(Automaton):
 
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
-            if ptype == 0:
-                #add the ack to the ack_buffer so we see if we need to send SACK headers
-                self.ack_buffer.append(num)
+            if ptype == 0:                  
+                    
 
                 # check if last packet --> end receiver
                 if len(payload) < self.p_size:
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
-                # this is the segment with the expected sequence number
+                                # this is the segment with the expected sequence number
                 if num == self.next:
                     log.debug("Packet has expected sequence number: %s", num)
 
@@ -204,6 +250,39 @@ class GBNReceiver(Automaton):
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
 
+                if sack_support == 1:
+                    self.block_list_for_header = [] #basically table but in an array
+                    buffer_keys = list(self.buffer.keys())
+                    buffer_keys.sort()
+                    log.debug('which ack are in buffer: '+ str(buffer_keys))
+                    log.debug('recevied all packets successfully until: ' + str(self.next))
+                    highest_key_number = 0
+                    #if len(buffer_keys) > 0:
+                    #    highest_key_number = max(buffer_keys)
+                    current_block = 0
+                    i = self.next
+                    new_block = False
+                    while i != i-1: #iterate from last ack to greatest
+                        if (current_block > 2): #filled 3 block buffer
+                            break
+                        counter = 1 #how many packets are after the first
+                        left_received = i #saving to remmeber first value in buffer
+                        if i in buffer_keys:
+                            new_block = True #we will need to say what we ve recevied
+                            i = i + 1 
+                            while (i in buffer_keys):
+                                counter +=1
+                                i = i + 1 
+                        if new_block:
+                            self.block_list_for_header.append(left_received)
+                            self.block_list_for_header.append(counter)
+                            current_block += 1
+                            new_block = False
+                        i = (i + 1% 2**self.n_bits)
+
+                    log.debug("block_ list for header ")
+                    log.debug(self.block_list_for_header)
+
             else:
                 # we received an ACK while we are supposed to receive only
                 # data segments
@@ -217,107 +296,8 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
-                '''
-                if num == self.next:
-                    header_GBN = GBN(type="ack",
-                                         options=1,
-                                         len=0,
-                                         hlen=6,
-                                         num=self.next,
-                                         win=self.win)
-
-                    self.ack_buffer.pop[0]
-                    self.next
-
-                '''
-
                 if sack_support == 1:
-                    seq_length = 1
-                    self.block_length = 0
-                    log.debug(self.block_length)
-                    log.debug(self.ack_buffer)  
-                    for i in range(len(self.ack_buffer)-1): #asset range>0
-                        # going over the correctly received segments
-                        if self.ack_buffer[i] + 1 == self.ack_buffer[i+1] and self.block_length == 0:
-                            continue
-                        # counting the length of segments that are in order
-                        elif self.ack_buffer[i] + 1 == self.ack_buffer[i + 1] and self.block_length != 0:
-                            seq_length += 1
-                        # first unordered segment 
-                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 0:
-                            self.block_length = 1
-                            self.left_edge_1 = self.ack_buffer[i+1]
-                        # length of first unordered segments and second unordered segment
-                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 1:
-                            self.length_1 = seq_length
-                            seq_length = 1
-                            self.block_length = 2
-                            self.left_edge_2 = self.ack_buffer[i+1]
-                        # length of second unordered segments and third unordered segment
-                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 2:
-                            self.length_2 = seq_length
-                            seq_length = 1
-                            self.block_length = 3
-                            self.left_edge_3 = self.ack_buffer[i+1]
-                        # length of third unordered segments and break up
-                        elif self.ack_buffer[i] + 1 != self.ack_buffer[i+1] and self.block_length == 3:
-                            self.length_3 = seq_length
-                            seq_length = 1
-                            break
-                    
-                    log.debug("Länge des Block_Buffers %s", len(self.ack_buffer))
-                    log.debug("Left Edge 1 %s", self.left_edge_1)
-                    log.debug("Länge 1 %s", self.length_1)
-                    
-                    if self.block_length == 0:
-                        header_GBN = GBN(type="ack",
-                                         options=1,
-                                         len=0,
-                                         hlen=6,
-                                         num=self.next,
-                                         win=self.win)
-
-                    elif self.block_length == 1:
-                        header_GBN = GBN(type="ack",
-                                         options=1,
-                                         len=0,
-                                         hlen=9,
-                                         num=self.next,
-                                         win=self.win,
-                                         block_length=self.block_length,
-                                         left_edge_1=self.left_edge_1,
-                                         length_1=self.length_1)
-
-                    elif self.block_length == 2:
-                        header_GBN = GBN(type="ack",
-                                         options=1,
-                                         len=0,
-                                         hlen=12,
-                                         num=self.next,     
-                                         win=self.win,
-                                         block_length=self.block_length,
-                                         left_edge_1=self.left_edge_1,
-                                         length_1=self.length_1,
-                                         padding_1=self.padding_1,
-                                         left_edge_2=self.left_edge_2,
-                                         length_2=self.length_2)
-
-                    elif self.block_length > 2:
-                        header_GBN = GBN(type="ack",
-                                         options=1,
-                                         len=0,
-                                         hlen=18,
-                                         num=self.next,
-                                         win=self.win,
-                                         block_length=self.block_length,
-                                         left_edge_1=self.left_edge_1,
-                                         length_1=self.length_1,
-                                         padding_1=self.padding_1,
-                                         left_edge_2=self.left_edge_2,
-                                         length_2=self.length_2,
-                                         padding_2=self.padding_2,
-                                         left_edge_3=self.left_edge_3,
-                                         length_3=self.length_3)
+                    header_GBN = self.fill_SACK_header_from_list()
 
                 else:
                     header_GBN = GBN(type="ack",
@@ -326,17 +306,17 @@ class GBNReceiver(Automaton):
                                      hlen=6,
                                      num=self.next,
                                      win=self.win)
-                                    
-                #log.debug(pkt.show())
+
                 log.debug("Sending ACK: %s", self.next)
                 send(IP(src=self.receiver, dst=self.sender) / header_GBN,
                      verbose=0)
 
                 # last packet received and all ACKs successfully transmitted
                 # --> close receiver
-                if self.end_receiver and self.end_num == self.next and False:
+                if self.end_receiver and self.end_num == self.next:
+                    log.debug("ending")
                     raise self.END()
-
+                    
             # transition to WAIT_SEGMENT to receive next segment
             raise self.WAIT_SEGMENT()
 
@@ -385,3 +365,4 @@ if __name__ == "__main__":
                                args.ack_l, size)
     # start automaton
     GBN_receiver.run()
+    
