@@ -256,21 +256,24 @@ class GBNReceiver(Automaton):
                     ####################################somehow apply the window to the keys
                     log.debug('which ack are in buffer: '+ str(buffer_keys))
                     log.debug('recevied all packets successfully until: ' + str(self.next))
+                    """
                     highest_key_number = 0
                     if len(buffer_keys) > 0:
-                        highest_key_number = max(buffer_keys)
+                        highest_key_number = max(buffer_keys) #highest key number should be self.next + win and %after
+                    """
                     current_block = 0
                     i = self.next
+                    highest_key_number = self.next + self.win
                     new_block = False
                     while (i < highest_key_number +1 ): #iterate from last ack to greatest
                         if (current_block > 2): #filled 3 block buffer
                             break
                         counter = 1 #how many packets are after the first
                         left_received = i #saving to remmeber first value in buffer
-                        if i in buffer_keys:
+                        if i%32 in buffer_keys: 
                             new_block = True #we ll need to say what we ve recevied
                             i = i + 1 
-                            while (i in buffer_keys):
+                            while (i%32 in buffer_keys):
                                 counter +=1
                                 i = i + 1 
                         if new_block:
@@ -313,10 +316,9 @@ class GBNReceiver(Automaton):
                 # --> close receiver
                 if self.end_receiver and self.end_num == self.next:
                     log.debug("ending")
-                    #raise self.END()
                     ###########################################################################################
 
-
+                    #raise self.END()
 
 
                     ###########################################################################################
