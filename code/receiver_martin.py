@@ -54,7 +54,7 @@ class GBN(Packet):
                    ByteField("hlen", 0),
                    ByteField("num", 0),
                    ByteField("win", 0),
-                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.options == 1),
+                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.hlen > 6),
                    ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 6),
                    ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 6),
                    ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 9),
@@ -321,7 +321,7 @@ class GBNReceiver(Automaton):
                 # --> close receiver
                 if self.end_receiver and self.end_num == self.next:
                     log.debug("ending")
-                    # raise self.END()
+                    raise self.END()
                     ###########################################################################################
 
 
