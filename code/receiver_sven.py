@@ -253,6 +253,7 @@ class GBNReceiver(Automaton):
                 if sack_support == 1:
                     self.block_list_for_header = [] #basically table but in an array
                     buffer_keys = list(self.buffer.keys())
+                    log.debug(buffer_keys)
                     current_block = 0
                     new_block = False
                     pointer = self.next
@@ -267,8 +268,6 @@ class GBNReceiver(Automaton):
                             pointer = (pointer + 1) % 2**self.n_bits
                             while pointer in buffer_keys:
                                 counter +=1
-                                #log.debug(pointer)
-                                #log.debug(counter)
                                 pointer = (pointer + 1) % 2**self.n_bits
                             if new_block:
                                 self.block_list_for_header.append(left_received)
