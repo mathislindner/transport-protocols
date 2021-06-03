@@ -257,7 +257,7 @@ class GBNReceiver(Automaton):
                     new_block = False
                     pointer = self.next
                     for i in range(self.win):
-                        pointer = (pointer + 1) % 2**self.n_bits
+                        pointer = (pointer + i) % 2**self.n_bits
                         if (current_block > 2): #filled 3 block buffer
                             break
                         counter = 1 #how many packets are after the first
