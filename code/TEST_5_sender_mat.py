@@ -201,7 +201,8 @@ class GBNSender(Automaton):
             elif sack_support == 1:
                 #extract the SACK information back to a []
                 log.debug('this is the SACK : ')
-                log.debug(self.SACK)
+                
+                log.debug(pkt.)
                 #check buffer to see non ACKed
                 #create a [] of misssing that needs to be retransmitted
                 missing_ACK = [] 
@@ -209,7 +210,7 @@ class GBNSender(Automaton):
                     payload = self.buffer[packet_number]
                     header_GBN = GBN(options = 1,type = 0, len=len(payload), hlen = 6, num = packet_number, win = self.win)
                     send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
-
+            #else?
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
