@@ -252,9 +252,9 @@ class GBNReceiver(Automaton):
                               "Expected %s", num, self.next)
                 in_block = False
                 if(sack_support == 1):
-                    self.block_list_for_header = [] #basically table but in an array
+                    self.block_list = [] 
                     buffer_keys = list(self.buffer.keys())
-                    for i in range(buffer_keys):
+                    for i in range(len(buffer_keys)):
                         if len(buffer_keys) == 0:
                             continue
                         if in_block == False and buffer_keys[i]% (2**n_bits) != (buffer_keys[i-1] + 1)% (2**n_bits):
