@@ -108,7 +108,6 @@ class GBNReceiver(Automaton):
         self.end_num = -1
         self.buffer = {}
         self.block_list_for_header = []
-        self.correctly_received = []
         
     def fill_SACK_header_from_list(self):
         """

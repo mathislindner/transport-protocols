@@ -133,9 +133,8 @@ class GBNSender(Automaton):
                 # and the corresponding payload                               #
                 ###############################################################
 
-                header_GBN = GBN(type = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                send(IP(options=1,src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
-                #        ^^^^^^
+                header_GBN = GBN(options = 1,type = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                #                  ^^^^^^
                 #
                 #
                 #
@@ -145,6 +144,7 @@ class GBNSender(Automaton):
                 #
                 #
                 #
+                send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
                 # sequence number of next packet
                 self.current = int((self.current + 1) % 2**self.n_bits)
@@ -203,10 +203,13 @@ class GBNSender(Automaton):
                 log.debug('this is the SACK : ')
                 log.debug(self.SACK)
                 #check buffer to see non ACKed
-                #create a [] of data that needs to be retransmitted
-                #for packets in lost_packets: sent_packet()
-                #############################################################
-                pass
+                #create a [] of misssing that needs to be retransmitted
+                missing_ACK = [] 
+                for packet_number in missing_ACK:
+                    payload = self.buffer[packet_number]
+                    header_GBN = GBN(options = 1,type = 0, len=len(payload), hlen = 6, num = packet_number, win = self.win)
+                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
+
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
