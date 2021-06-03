@@ -214,7 +214,7 @@ class GBNSender(Automaton):
                         while i < pkt.getlayer(GBN).left_edge_1:
                             self.sack_buffer.append(i)
                             i+=1
-                        k = pkt.getlayer(GBN).left_edge_1 + length_1
+                        k = pkt.getlayer(GBN).left_edge_1 + pkt.getlayer(BNG).length_1
                         while k < pkt.getlayer(GBN).left_edge_2:
                             self.sack_buffer.append(k)
                     if block_length == 3:
@@ -222,10 +222,10 @@ class GBNSender(Automaton):
                         while i < pkt.getlayer(GBN).left_edge_1:
                             self.sack_buffer.append(i)
                             i+=1
-                        k = pkt.getlayer(GBN).left_edge_1 + length_1
+                        k = pkt.getlayer(GBN).left_edge_1 + pkt.getlayer(BNG).length_1
                         while k < pkt.getlayer(GBN).left_edge_2:
                             self.sack_buffer.append(k)
-                        s = pkt.getlayer(GBN).left_edge_2 + length_2
+                        s = pkt.getlayer(GBN).left_edge_2 + pkt.getlayer(BNG).length_2
                         while s < pkt.getlayer(GBN).left_edge_3:
                             self.sack_buffer.append(s)
                 for n in self.sack_buffer:
