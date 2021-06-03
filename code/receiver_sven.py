@@ -253,32 +253,26 @@ class GBNReceiver(Automaton):
                 if sack_support == 1:
                     self.block_list_for_header = [] #basically table but in an array
                     buffer_keys = list(self.buffer.keys())
-                    buffer_keys.sort()
-                    log.debug('which ack are in buffer: '+ str(buffer_keys))
-                    log.debug('recevied all packets successfully until: ' + str(self.next))
-                    highest_key_number = 0
-                    #if len(buffer_keys) > 0:
-                    #    highest_key_number = max(buffer_keys)
                     current_block = 0
-                    i = self.next
                     new_block = False
-                    while i != i-1: #iterate from last ack to greatest
+
+                    for i in range(self.win):
                         if (current_block > 2): #filled 3 block buffer
                             break
                         counter = 1 #how many packets are after the first
                         left_received = i #saving to remmeber first value in buffer
-                        if i in buffer_keys:
+                        if i + num in buffer_keys:
                             new_block = True #we will need to say what we ve recevied
-                            i = i + 1 
-                            while (i in buffer_keys):
+                            i = (i + num + 1) % 2**self.n_bits
+                            while i + num in buffer_keys:
                                 counter +=1
-                                i = i + 1 
-                        if new_block:
-                            self.block_list_for_header.append(left_received)
-                            self.block_list_for_header.append(counter)
-                            current_block += 1
-                            new_block = False
-                        i = (i + 1% 2**self.n_bits)
+                                i = (i + num + 1) % 2**self.n_bits
+                            if new_block:
+                                self.block_list_for_header.append(left_received)
+                                self.block_list_for_header.append(counter)
+                                current_block += 1
+                                new_block = False
+                            i = (i + num + 1) % 2**self.n_bits  
 
                     log.debug("block_ list for header ")
                     log.debug(self.block_list_for_header)
