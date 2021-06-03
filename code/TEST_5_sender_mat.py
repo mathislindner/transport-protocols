@@ -223,7 +223,7 @@ class GBNSender(Automaton):
                 #check buffer to see non ACKed
                 #create a [] of misssing that needs to be retransmitted
                 missing_ACK = []
-                SACK_information_list = self.extract_SACK(pkt)
+                SACK_information_list = self.extract_SACK(pkt) #[leftedge1,length1,leftedge2,length2,,]
 
                 first_unacked = self.unack
                 blocks = pkt.getlayer(GBN).block_number
@@ -231,7 +231,7 @@ class GBNSender(Automaton):
                     blocks = 0
                 for i in range(blocks):
                     for j in range(first_unacked,SACK_information_list[2*i]):
-                        missing_ACK.append(j)
+                        missing_ACK.append(j%32)
                     first_unacked = SACK_information_list[2*i] + SACK_information_list[2*i+1]
 
                 for packet_number in missing_ACK:
