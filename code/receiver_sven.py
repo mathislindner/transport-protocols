@@ -257,7 +257,7 @@ class GBNReceiver(Automaton):
                     new_block = False
                     log.debug(self.next)
                     for i in range(self.win):
-                        pointer = i + self.next
+                        pointer = int(i + self.next)
                         log.debug(pointer)
                         #log.debug(i)
                         if (current_block > 2): #filled 3 block buffer
@@ -270,7 +270,7 @@ class GBNReceiver(Automaton):
                         if pointer in buffer_keys:
                             new_block = True #we will need to say what we ve recevied
                             #i = (i + self.next + 1) % 2**self.n_bits
-                            pointer = (pointer + 1) % 2**self.n_bits
+                            pointer = int((pointer + 1) % 2**self.n_bits)
                             #while i in buffer_keys:
                             while pointer in buffer_keys:
                                 counter +=1
@@ -278,14 +278,14 @@ class GBNReceiver(Automaton):
                                 log.debug(pointer)
                                 log.debug(counter)
                                 #i = (i + 1) % 2**self.n_bits
-                                pointer = (pointer + 1) % 2**self.n_bits
+                                pointer = int((pointer + 1) % 2**self.n_bits)
                             if new_block:
                                 self.block_list_for_header.append(left_received)
                                 self.block_list_for_header.append(counter)
                                 current_block += 1
                                 new_block = False
                             #i = (i + self.next + 1) % 2**self.n_bits
-                            pointer = (pointer + 1) % 2**self.n_bits
+                            pointer = int((pointer + 1) % 2**self.n_bits)
                         #log.debug(i)
                         log.debug(pointer)
 
