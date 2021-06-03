@@ -40,7 +40,16 @@ class GBN(Packet):
                    ShortField("len", None),
                    ByteField("hlen", 0),
                    ByteField("num", 0),
-                   ByteField("win", 0)]
+                   ByteField("win", 0),
+                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 6),
+                   ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("left_edge_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("length_2", 0), lambda pkt:pkt.hlen > 9),
+                   ConditionalField ( ByteField ("padding_2", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("left_edge_3", 0), lambda pkt:pkt.hlen > 12),
+                   ConditionalField ( ByteField ("length_3", 0), lambda pkt:pkt.hlen > 12)]
 
 
 # GBN header is coming after the IP header
@@ -97,6 +106,18 @@ class GBNSender(Automaton):
         """
         return (IP in pkt and pkt[IP].src == self.receiver and GBN in pkt
                 and ICMP not in pkt)
+    def extract_SACK(self,pkt):
+        SACK_information = []
+        try:
+            SACK_information.append(pkt.getlayer(GBN).left_edge_1)
+            SACK_information.append(pkt.getlayer(GBN).length_1)
+            SACK_information.append(pkt.getlayer(GBN).left_edge_2)
+            SACK_information.append(pkt.getlayer(GBN).length_2)
+            SACK_information.append(pkt.getlayer(GBN).left_edge_3)
+            SACK_information.append(pkt.getlayer(GBN).length_3)
+        except:
+            pass
+        return SACK_information
 
     @ATMT.state(initial=1)
     def BEGIN(self):
@@ -184,7 +205,6 @@ class GBNSender(Automaton):
             # remove all the acknowledged sequence numbers from the buffer #
             # make sure that you can handle a sequence number overflow     #
             ################################################################
-            sack_support = pkt.getlayer(GBN).options
 
             
             if self.Q_4_2:
@@ -198,14 +218,22 @@ class GBNSender(Automaton):
                 else:
                     self.acks_received[ack] = 1
 
-            elif sack_support == 1:
+            elif self.SACK == 1:
                 #extract the SACK information back to a []
-                log.debug('this is the SACK : ')
-                
-                log.debug(pkt.)
                 #check buffer to see non ACKed
                 #create a [] of misssing that needs to be retransmitted
-                missing_ACK = [] 
+                missing_ACK = []
+                SACK_information_list = self.extract_SACK(pkt)
+
+                first_unacked = self.unack
+                blocks = pkt.getlayer(GBN).block_number
+                if blocks is None:
+                    blocks = 0
+                for i in range(blocks):
+                    for j in range(first_unacked,SACK_information_list[2*i]):
+                        missing_ACK.append(j)
+                    first_unacked = SACK_information_list[2*i] + SACK_information_list[2*i+1]
+
                 for packet_number in missing_ACK:
                     payload = self.buffer[packet_number]
                     header_GBN = GBN(options = 1,type = 0, len=len(payload), hlen = 6, num = packet_number, win = self.win)
