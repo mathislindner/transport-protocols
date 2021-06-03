@@ -259,7 +259,7 @@ class GBNReceiver(Automaton):
                     for i in range(self.win):
                         if (current_block > 2): #filled 3 block buffer
                             break
-                        counter = 1 #how many packets are after the first
+                        counter = 0 #how many packets are after the first
                         left_received = i + self.next #saving to remmeber first value in buffer
                         if i + self.next in buffer_keys:
                             new_block = True #we will need to say what we ve recevied
