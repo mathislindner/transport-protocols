@@ -202,7 +202,7 @@ class GBNSender(Automaton):
 
             if self.SACK:
                 sack_support = pkt.getlayer(GBN).options
-                block_length = pkt.getlayer(GBN).number
+                block_length = pkt.getlayer(GBN).block_number
                 if sack_support:
                     if block_length == 1:
                         i = self.unack
