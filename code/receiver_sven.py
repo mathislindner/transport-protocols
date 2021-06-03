@@ -258,7 +258,7 @@ class GBNReceiver(Automaton):
                     log.debug(self.next)
                     pointer = self.next
                     for i in range(self.win):
-                        pointer = (pointer + i) 2**self.n_bits
+                        pointer = (pointer + i) % 2**self.n_bits
                         log.debug(pointer)
                         #log.debug(i)
                         if (current_block > 2): #filled 3 block buffer
