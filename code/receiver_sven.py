@@ -275,7 +275,6 @@ class GBNReceiver(Automaton):
                                 self.block_list_for_header.append(counter)
                                 current_block += 1
                                 new_block = False
-                            #pointer = (pointer + 1) % 2**self.n_bits
 
                     log.debug("block_ list for header ")
                     log.debug(self.block_list_for_header)
