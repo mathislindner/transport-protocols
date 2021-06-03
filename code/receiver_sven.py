@@ -285,6 +285,7 @@ class GBNReceiver(Automaton):
                                 current_block += 1
                                 new_block = False
                             #i = (i + self.next + 1) % 2**self.n_bits
+                            log.debug(pointer)
                             pointer = int((pointer + 1) % 2**self.n_bits)
                         #log.debug(i)
                         log.debug(pointer)
