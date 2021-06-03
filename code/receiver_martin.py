@@ -267,7 +267,7 @@ class GBNReceiver(Automaton):
                     if i == 0:
                         previous_key = 31
 
-                    while (i < previous_key ): #iterate from last ack to greatest
+                    while (i != previous_key ): #iterate from last ack to greatest
                         if (current_block > 2): #filled 3 block buffer
                             break
                         counter = 1 #how many packets are after the first
