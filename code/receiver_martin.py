@@ -131,8 +131,8 @@ class GBNReceiver(Automaton):
                                 num=self.next,
                                 win=self.win,
                                 block_number = block_number,
-                                left_edge_1 = block_list[0],
-                                length_1 = block_list[1])
+                                left_edge_1 = self.block_list[0],
+                                length_1 = self.block_list[1])
         elif block_number < 3:
             header_GBN = GBN(type="ack",
                                 options=1,
@@ -141,11 +141,11 @@ class GBNReceiver(Automaton):
                                 num=self.next,
                                 win=self.win,
                                 block_number = block_number,
-                                left_edge_1 = block_list[0],
-                                length_1 = block_list[1],
+                                left_edge_1 = self.block_list[0],
+                                length_1 = self.block_list[1],
                                 padding_1=1,
-                                left_edge_2=block_list[2],
-                                length_2=block_list[3])
+                                left_edge_2=self.block_list[2],
+                                length_2=self.block_list[3])
         else:
             header_GBN = GBN(type="ack",
                                 options=1,
@@ -154,14 +154,14 @@ class GBNReceiver(Automaton):
                                 num=self.next,
                                 win=self.win,
                                 block_number = block_number,
-                                left_edge_1 = block_list[0],
-                                length_1 = block_list[1],
+                                left_edge_1 = self.block_list[0],
+                                length_1 = self.block_list[1],
                                 padding_1=1,
-                                left_edge_2=block_list[2],
-                                length_2=block_list[3],
+                                left_edge_2=self.block_list[2],
+                                length_2=self.block_list[3],
                                 padding_2=1,
-                                left_edge_3=block_list[4],
-                                length_3=block_list[5])
+                                left_edge_3=self.block_list[4],
+                                length_3=self.block_list[5])
         return header_GBN
 
     def master_filter(self, pkt):
