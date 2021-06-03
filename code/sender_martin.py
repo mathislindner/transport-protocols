@@ -209,7 +209,7 @@ class GBNSender(Automaton):
                         while i < pkt.getlayer(GBN).left_edge_1:
                             self.sack_buffer.append(i)
                             i+=1
-                    if block length == 2:
+                    if block_length == 2:
                         i = self.unack
                         while i < pkt.getlayer(GBN).left_edge_1:
                             self.sack_buffer.append(i)
