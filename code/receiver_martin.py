@@ -107,7 +107,7 @@ class GBNReceiver(Automaton):
         self.end_receiver = False
         self.end_num = -1
         self.buffer = {}
-        self.block_list_for_header = []
+        self.block_list = []
         self.correctly_received = []
         
     def fill_SACK_header_from_list(self):
@@ -115,8 +115,7 @@ class GBNReceiver(Automaton):
         input: list for SACK
         returns: a header with SACK 
         """
-        block_list = self.block_list_for_header #to not work with the object directly
-        block_number = int(len(block_list)/2)
+        block_number = min(3, int(len(block_list)/2))
         if block_number < 1:
             header_GBN = GBN(type="ack",
                                 options=1,
@@ -251,10 +250,25 @@ class GBNReceiver(Automaton):
                     self.buffer[num] = payload
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
-
+                in_block = False
                 if(sack_support == 1):
                     self.block_list_for_header = [] #basically table but in an array
                     buffer_keys = list(self.buffer.keys())
+                    for i in range(buffer_keys):
+                        if len(buffer_keys) == 0:
+                            continue
+                        if in_block == False and buffer_keys[i]% (2**n_bits) != (buffer_keys[i-1] + 1)% (2**n_bits):
+                            self.block_list.append(buffer_keys[i])
+                            in_block = True
+                        if in_block:
+                            if buffer_keys[i]% (2**n_bits) != (buffer_keys[i-1] + 1)% (2**n_bits):
+                                self.block_list.append(buffer_keys[i-1])
+                                in_block = False
+                    
+
+                    
+                    
+                    '''
                     buffer_keys.sort()
                     log.debug('which ack are in buffer: '+ str(buffer_keys))
                     log.debug('recevied all packets successfully until: ' + str(self.next))
@@ -283,6 +297,7 @@ class GBNReceiver(Automaton):
                         i = int((i + 1) % 2 ** self.n_bits) 
                     log.debug("block_ list for header ")
                     log.debug(self.block_list_for_header)
+                    '''
             else:
                 # we received an ACK while we are supposed to receive only
                 # data segments
