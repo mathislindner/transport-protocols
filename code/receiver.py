@@ -226,44 +226,44 @@ class GBNReceiver(Automaton):
                     #self.end_num = (num + 1) % 2**self.n_bits
 
                 # this is the segment with the expected sequence number
-                if num == self.next:
-                    log.debug("Packet has expected sequence number: %s", num)
+            if num == self.next:
+                log.debug("Packet has expected sequence number: %s", num)
 
-                    # append payload (as binary data) to output file
+                # append payload (as binary data) to output file
+                with open(self.out_file, 'ab') as file:
+                    file.write(payload)
+
+                log.debug("Delivered packet to upper layer: %s", num)
+
+                self.next = int((self.next + 1) % 2 ** self.n_bits)
+
+                while self.next in self.buffer.keys():
+                    log.debug("Added %s to output-file",self.next)
                     with open(self.out_file, 'ab') as file:
-                        file.write(payload)
-
-                    log.debug("Delivered packet to upper layer: %s", num)
-
+                        file.write(self.buffer.pop(self.next))
                     self.next = int((self.next + 1) % 2 ** self.n_bits)
 
-                    while self.next in self.buffer.keys():
-                        log.debug("Added %s to output-file",self.next)
-                        with open(self.out_file, 'ab') as file:
-                            file.write(self.buffer.pop(self.next))
-                        self.next = int((self.next + 1) % 2 ** self.n_bits)
-
-                # this was not the expected segment
-                else:
-                    self.buffer[num] = payload
-                    log.debug("Out of sequence segment [num = %s] received. "
-                              "Expected %s", num, self.next)
-
+            # this was not the expected segment
             else:
-                # we received an ACK while we are supposed to receive only
-                # data segments
-                log.error("ERROR: Received ACK segment: %s", pkt.show())
-                raise self.WAIT_SEGMENT()
+                self.buffer[num] = payload
+                log.debug("Out of sequence segment [num = %s] received. "
+                          "Expected %s", num, self.next)
 
-            # send ACK back to sender
-            if random.random() < self.p_ack:
-                # the ACK will be lost, discard it
-                log.debug("Lost ACK: %s", self.next)
+        else:
+            # we received an ACK while we are supposed to receive only
+            # data segments
+            log.error("ERROR: Received ACK segment: %s", pkt.show())
+            raise self.WAIT_SEGMENT()
 
-            # the ACK will be received correctly
-            else:
-                if sack_support == 1 and self.block_length == 1:
-                    header_GBN = GBN(type="ack",
+        # send ACK back to sender
+        if random.random() < self.p_ack:
+            # the ACK will be lost, discard it
+            log.debug("Lost ACK: %s", self.next)
+
+        # the ACK will be received correctly
+        else:
+            if sack_support == 1 and self.block_length == 1:
+                header_GBN = GBN(type="ack",
                                  options=1,
                                  len=0,
                                  hlen=9,
@@ -273,8 +273,8 @@ class GBNReceiver(Automaton):
                                  left_edge_1=self.left_edge_1,
                                  length_1=self.length_1)
 
-                elif sack_support == 1 and self.block_length == 2:
-                    header_GBN = GBN(type="ack",
+            elif sack_support == 1 and self.block_length == 2:
+                header_GBN = GBN(type="ack",
                                  options=1,
                                  len=0,
                                  hlen=12,
@@ -287,8 +287,8 @@ class GBNReceiver(Automaton):
                                  left_edge_2 = self.left_edge_2,
                                  length_2 = self.length_2)
 
-                elif sack_support == 1 and self.block_length == 3:
-                    header_GBN = GBN(type="ack",
+            elif sack_support == 1 and self.block_length == 3:
+                header_GBN = GBN(type="ack",
                                  options=1,
                                  len=0,
                                  hlen=18,
@@ -303,33 +303,33 @@ class GBNReceiver(Automaton):
                                  padding_2 = self.padding_2,
                                  left_edge_3 = self.left_edge_3,
                                  length_3 = self.length_3)
-                elif sack_support == 1:
-                    header_GBN = GBN(type="ack",
+            elif sack_support == 1:
+                header_GBN = GBN(type="ack",
                                  options=1,
                                  len=0,
                                  hlen=6,
                                  num=self.next,
                                  win=self.win)
-                else:
-                    header_GBN = GBN(type="ack",
+            else:
+                header_GBN = GBN(type="ack",
                                      options=0,
                                      len=0,
                                      hlen=6,
                                      num=self.next,
                                      win=self.win)
 
-                log.debug("Sending ACK: %s", self.next)
-                send(IP(src=self.receiver, dst=self.sender) / header_GBN,
+            log.debug("Sending ACK: %s", self.next)
+            send(IP(src=self.receiver, dst=self.sender) / header_GBN,
                      verbose=0)
 
                 # last packet received and all ACKs successfully transmitted
                 # --> close receiver
-                if self.end_receiver and self.end_num == self.next:
-                    log.debug("ending")
-                    raise self.END()
+            if self.end_receiver and self.end_num == self.next:
+                log.debug("ending")
+                raise self.END()
 
-            # transition to WAIT_SEGMENT to receive next segment
-            raise self.WAIT_SEGMENT()
+        # transition to WAIT_SEGMENT to receive next segment
+        raise self.WAIT_SEGMENT()
 
 
 if __name__ == "__main__":
