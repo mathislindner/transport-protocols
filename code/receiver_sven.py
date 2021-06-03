@@ -264,7 +264,7 @@ class GBNReceiver(Automaton):
                         if i + self.next in buffer_keys:
                             new_block = True #we will need to say what we ve recevied
                             i = (i + self.next + 1) % 2**self.n_bits
-                            while i + self.next in buffer_keys:
+                            while i in buffer_keys:
                                 counter +=1
                                 i = (i + self.next + 1) % 2**self.n_bits
                             if new_block:
