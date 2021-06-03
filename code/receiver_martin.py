@@ -263,7 +263,8 @@ class GBNReceiver(Automaton):
                         highest_key_number = max(buffer_keys)
                     current_block = 0
                     i = self.next
-                    while (i < highest_key_number ): #iterate from last ack to greatest
+                    new_block = False
+                    while (i < highest_key_number): #iterate from last ack to greatest
                         if (current_block > 2): #filled 3 block buffer
                             break
                         counter = 1 #how many packets are after the first
