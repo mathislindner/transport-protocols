@@ -293,6 +293,11 @@ class GBNReceiver(Automaton):
                 log.debug("Lost ACK: %s", self.next)
 
             # the ACK will be received correctly
+            
+
+
+
+
             else:
                 if sack_support == 1:
                     header_GBN = self.fill_SACK_header_from_list()
@@ -313,7 +318,7 @@ class GBNReceiver(Automaton):
                 # --> close receiver
                 if self.end_receiver and self.end_num == self.next:
                     log.debug("ending")
-                    #raise self.END()
+                    raise self.END()
                     ###########################################################################################
 
 
