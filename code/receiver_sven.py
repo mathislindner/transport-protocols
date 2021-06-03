@@ -257,27 +257,37 @@ class GBNReceiver(Automaton):
                     new_block = False
 
                     for i in range(self.win):
-                        log.debug(i)  
+                        pointer = i + self.next
+                        log.debug(pointer)
+                        #log.debug(i)
                         if (current_block > 2): #filled 3 block buffer
                             break
                         counter = 1 #how many packets are after the first
-                        left_received = i + self.next #saving to remmeber first value in buffer
+                        #left_received = i + self.next #saving to remmeber first value in buffer
+                        left_received = pointer #saving to remmeber first value in buffer
                         log.debug(left_received)
-                        if i + self.next in buffer_keys:
+                        #if i + self.next in buffer_keys:
+                        if pointer in buffer_keys:
                             new_block = True #we will need to say what we ve recevied
-                            i = (i + self.next + 1) % 2**self.n_bits
-                            while i in buffer_keys:
+                            #i = (i + self.next + 1) % 2**self.n_bits
+                            pointer = (pointer + 1) % 2**self.n_bits
+                            #while i in buffer_keys:
+                            while pointer in buffer_keys:
                                 counter +=1
-                                log.debug(i)
+                                #log.debug(i)
+                                log.debug(pointer)
                                 log.debug(counter)
-                                i = (i + 1) % 2**self.n_bits
+                                #i = (i + 1) % 2**self.n_bits
+                                pointer = (pointer + 1) % 2**self.n_bits
                             if new_block:
                                 self.block_list_for_header.append(left_received)
                                 self.block_list_for_header.append(counter)
                                 current_block += 1
                                 new_block = False
-                            i = (i + self.next + 1) % 2**self.n_bits
-                        log.debug(i)  
+                            #i = (i + self.next + 1) % 2**self.n_bits
+                            pointer = (pointer + 1) % 2**self.n_bits
+                        #log.debug(i)
+                        log.debug(pointer)
 
                     log.debug("block_ list for header ")
                     log.debug(self.block_list_for_header)
