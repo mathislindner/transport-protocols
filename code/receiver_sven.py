@@ -266,6 +266,8 @@ class GBNReceiver(Automaton):
                             i = (i + self.next + 1) % 2**self.n_bits
                             while i in buffer_keys:
                                 counter +=1
+                                log.debug(i)
+                                log.debug(counter)
                                 i = (i + 1) % 2**self.n_bits
                             if new_block:
                                 self.block_list_for_header.append(left_received)
