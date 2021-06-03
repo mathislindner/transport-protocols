@@ -275,9 +275,6 @@ class GBNReceiver(Automaton):
                                 current_block += 1
                                 new_block = False
 
-                    log.debug("block_ list for header ")
-                    log.debug(self.block_list_for_header)
-
             else:
                 # we received an ACK while we are supposed to receive only
                 # data segments
