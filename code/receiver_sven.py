@@ -255,7 +255,7 @@ class GBNReceiver(Automaton):
                     buffer_keys = list(self.buffer.keys())
                     current_block = 0
                     new_block = False
-
+                    log.debug(self.next)
                     for i in range(self.win):
                         pointer = i + self.next
                         log.debug(pointer)
