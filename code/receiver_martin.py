@@ -257,11 +257,11 @@ class GBNReceiver(Automaton):
                     for i in range(len(buffer_keys)):
                         if len(buffer_keys) == 0:
                             continue
-                        if in_block == False and buffer_keys[i]% (2**n_bits) != (buffer_keys[i-1] + 1)% (2**n_bits):
+                        if in_block == False and buffer_keys[i]% (2**self.n_bits) != (buffer_keys[i-1] + 1)% (2**self.n_bits):
                             self.block_list.append(buffer_keys[i])
                             in_block = True
                         if in_block:
-                            if buffer_keys[i]% (2**n_bits) != (buffer_keys[i-1] + 1)% (2**n_bits):
+                            if buffer_keys[i]% (2**self.n_bits) != (buffer_keys[i-1] + 1)% (2**self.n_bits):
                                 self.block_list.append(buffer_keys[i-1])
                                 in_block = False
                     
