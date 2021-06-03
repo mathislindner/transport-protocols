@@ -261,18 +261,18 @@ class GBNReceiver(Automaton):
                             break
                         counter = 1 #how many packets are after the first
                         left_received = i #saving to remmeber first value in buffer
-                        if i + num in buffer_keys:
+                        if i + self.next in buffer_keys:
                             new_block = True #we will need to say what we ve recevied
-                            i = (i + num + 1) % 2**self.n_bits
-                            while i + num in buffer_keys:
+                            i = (i + self.next + 1) % 2**self.n_bits
+                            while i + self.next in buffer_keys:
                                 counter +=1
-                                i = (i + num + 1) % 2**self.n_bits
+                                i = (i + self.next + 1) % 2**self.n_bits
                             if new_block:
                                 self.block_list_for_header.append(left_received)
                                 self.block_list_for_header.append(counter)
                                 current_block += 1
                                 new_block = False
-                            i = (i + num + 1) % 2**self.n_bits  
+                            i = (i + self.next + 1) % 2**self.n_bits  
 
                     log.debug("block_ list for header ")
                     log.debug(self.block_list_for_header)
