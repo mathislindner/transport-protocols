@@ -54,7 +54,7 @@ class GBN(Packet):
                    ByteField("hlen", 0),
                    ByteField("num", 0),
                    ByteField("win", 0),
-                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.options == 1),
+                   ConditionalField ( ByteField ("block_number", 0), lambda pkt:pkt.hlen > 6),
                    ConditionalField ( ByteField ("left_edge_1", 0), lambda pkt:pkt.hlen > 6),
                    ConditionalField ( ByteField ("length_1", 0), lambda pkt:pkt.hlen > 6),
                    ConditionalField ( ByteField ("padding_1", 0), lambda pkt:pkt.hlen > 9),
@@ -85,7 +85,7 @@ class GBNReceiver(Automaton):
         end_receiver: Can we close the receiver?
         end_num: Sequence number of last packet + 1
         buffer: buffer to save out of order segments
-        block_list_for_header: jsut like table but in 1d, in other words: reshape(6)
+        block_list_for_header: just like table but in 1d, in other words: reshape(6)
     """
 
     def parse_args(self, receiver, sender, nbits, out_file, window, p_data,
@@ -111,7 +111,8 @@ class GBNReceiver(Automaton):
         self.correctly_received = []
         
     def fill_SACK_header_from_list(self):
-        """
+        """Function to create SACK headers from a given list should look like the matrix from the assignement but reshaped and without the padding
+        input: list for SACK
         input: list for SACK
         returns: a header with SACK 
         """
@@ -218,17 +219,13 @@ class GBNReceiver(Automaton):
 
             # check if segment is a data segment
             ptype = pkt.getlayer(GBN).type
-            if ptype == 0:                  
-                    
-
+            if ptype == 0:         
                 # check if last packet --> end receiver
                 if len(payload) < self.p_size:
-                    log.debug("payload %s", len(payload))
-                    log.debug("p_size %s", self.p_size)
                     self.end_receiver = True
                     self.end_num = (num + 1) % 2**self.n_bits
 
-                                # this is the segment with the expected sequence number
+                # this is the segment with the expected sequence number
                 if num == self.next:
                     log.debug("Packet has expected sequence number: %s", num)
 
@@ -239,7 +236,7 @@ class GBNReceiver(Automaton):
                     log.debug("Delivered packet to upper layer: %s", num)
 
                     self.next = int((self.next + 1) % 2 ** self.n_bits)
-
+                    #if we have the next expected payloads already in the buffer, add to output file
                     while self.next in self.buffer.keys():
                         log.debug("Added %s to output-file",self.next)
                         with open(self.out_file, 'ab') as file:
@@ -248,41 +245,39 @@ class GBNReceiver(Automaton):
 
                 # this was not the expected segment
                 else:
+                    #add to buffer
                     self.buffer[num] = payload
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
 
-                if(sack_support == 1):
+                if sack_support == 1:
                     self.block_list_for_header = [] #basically table but in an array
                     buffer_keys = list(self.buffer.keys())
-                    buffer_keys.sort()
-                    log.debug('which ack are in buffer: '+ str(buffer_keys))
-                    log.debug('recevied all packets successfully until: ' + str(self.next))
-                    highest_key_number = 0
-                    if len(buffer_keys) > 0:
-                        highest_key_number = max(buffer_keys)
                     current_block = 0
-                    i = self.next
                     new_block = False
-                    while (i < highest_key_number +1 ): #iterate from last ack to greatest
+                    #the pointer is just there bc we can't increment the loop variable
+                    pointer = self.next
+                    for _ in range(self.win):
+                        pointer = (pointer + 1) % 2**self.n_bits
                         if (current_block > 2): #filled 3 block buffer
                             break
                         counter = 1 #how many packets are after the first
-                        left_received = i #saving to remmeber first value in buffer
-                        if i in buffer_keys:
-                            new_block = True #we ll need to say what we ve recevied
-                            i = i + 1 
-                            while (i in buffer_keys):
+                        left_received = pointer #saving to remmeber first value in buffer
+                        #go through our buffer to see which packets we already have
+                        if pointer in buffer_keys:
+                            new_block = True #we will need to say what we ve recevied
+                            pointer = (pointer + 1) % 2**self.n_bits
+                            #as long as we have the next packet-> counter++
+                            while pointer in buffer_keys:
                                 counter +=1
-                                i = i + 1 
-                        if new_block:
-                            self.block_list_for_header.append(left_received)
-                            self.block_list_for_header.append(counter)
-                            current_block += 1
-                            new_block = False
-                        i = i + 1
-                    log.debug("block_ list for header ")
-                    log.debug(self.block_list_for_header)
+                                pointer = (pointer + 1) % 2**self.n_bits
+                            #then append our newly created header information
+                            if new_block:
+                                self.block_list_for_header.append(left_received)
+                                self.block_list_for_header.append(counter)
+                                current_block += 1
+                                new_block = False
+
             else:
                 # we received an ACK while we are supposed to receive only
                 # data segments
@@ -295,11 +290,6 @@ class GBNReceiver(Automaton):
                 log.debug("Lost ACK: %s", self.next)
 
             # the ACK will be received correctly
-            
-
-
-
-
             else:
                 if sack_support == 1:
                     header_GBN = self.fill_SACK_header_from_list()
@@ -313,6 +303,7 @@ class GBNReceiver(Automaton):
                                      win=self.win)
 
                 log.debug("Sending ACK: %s", self.next)
+                log.debug("sending this header: %s", header_GBN)
                 send(IP(src=self.receiver, dst=self.sender) / header_GBN,
                      verbose=0)
 
@@ -320,13 +311,8 @@ class GBNReceiver(Automaton):
                 # --> close receiver
                 if self.end_receiver and self.end_num == self.next:
                     log.debug("ending")
-                    # raise self.END()
-                    ###########################################################################################
-
-
-
-
-                    ###########################################################################################
+                    raise self.END()
+                    
             # transition to WAIT_SEGMENT to receive next segment
             raise self.WAIT_SEGMENT()
 
@@ -374,4 +360,5 @@ if __name__ == "__main__":
                                output_file, args.window_size, args.data_l,
                                args.ack_l, size)
     # start automaton
-GBN_receiver.run()
+    GBN_receiver.run()
+    
