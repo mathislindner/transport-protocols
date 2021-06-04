@@ -157,15 +157,16 @@ class GBNSender(Automaton):
                 # and the corresponding payload                               #
                 ###############################################################
                 
-                #For 4.1 and 4.2.2
-                if self.SACK != 1:
-                    header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
+                if len(self.buffer) <= self.win:
+                    #For 4.1 and 4.2.2
+                    if self.SACK != 1:
+                        header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
-                #For 4.3.2
-                if self.SACK == 1:
-                    header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
+                    #For 4.3.2
+                    if self.SACK == 1:
+                        header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
 
                 # sequence number of next packet
                 self.current = int((self.current + 1) % 2**self.n_bits)
@@ -200,12 +201,6 @@ class GBNSender(Automaton):
             self.receiver_win = pkt.getlayer(GBN).win
             ack = pkt.getlayer(GBN).num
 
-            ################################################################
-            # TODO:                                                        #
-            # remove all the acknowledged sequence numbers from the buffer #
-            # make sure that you can handle a sequence number overflow     #
-            ################################################################
-
             if self.Q_4_2 == 1:
                 if ack in self.acks_received:
                     self.acks_received[ack] += 1
@@ -217,6 +212,15 @@ class GBNSender(Automaton):
                 else :
                     self.acks_received[ack] = 1
                 #elif ack <= (self.win + self.unack) % 2**self.n_bits:
+
+
+            ################################################################
+            # TODO:                                                        #
+            # remove all the acknowledged sequence numbers from the buffer #
+            # make sure that you can handle a sequence number overflow     #
+            ################################################################
+
+
                     
             while self.unack != ack:
                 if self.unack in self.buffer:
