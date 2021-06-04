@@ -225,13 +225,15 @@ class GBNSender(Automaton):
                     #[leftedge1,length1,leftedge2,length2,,]
                     SACK_information_list = self.extract_SACK(pkt)
                     blocks = pkt.getlayer(GBN).block_number
-                    first_unacked = self.unack + 1 
+                    not_received = ack 
                     missing_ACK = []
                     for i in range(blocks):
                         for j in range(SACK_information_list[2*i]):
-                            log.debug("Missing ptk: %s", first_unacked + j)
-                            missing_ACK.append((first_unacked + j) % 2**self.n_bits)
-                        first_unacked = (SACK_information_list[2*i] + SACK_information_list[2*i+1]) % 2**self.n_bits
+                            missing_ACK_number = (not_received + j) % 2**self.n_bits
+                            log.debug("Missing ptk: %s", missing_ACK)
+                            missing_ACK.append(missing_ACK_number)
+                        not_received = (SACK_information_list[2*i] + SACK_information_list[2*i+1]) % 2**self.n_bits
+                        log.debug("not received: %s", not_received)
 
                     for packet_number in missing_ACK:
                         if len(self.buffer.keys()) != 0:
