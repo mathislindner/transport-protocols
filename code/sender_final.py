@@ -156,10 +156,13 @@ class GBNSender(Automaton):
                 # send a packet to the receiver containing the created header #
                 # and the corresponding payload                               #
                 ###############################################################
+                
+                #For 4.1 and 4.2.2
                 if self.SACK != 1:
                     header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
                     send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
+                #For 4.3.2
                 if self.SACK == 1:
                     header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
                     send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
@@ -263,12 +266,17 @@ class GBNSender(Automaton):
         # retransmit all the unacknowledged packets  #
         # (all the packets currently in self.buffer) #
         ##############################################
+
+        # Retransmitting the full buffer in case of a time out
+        
+        #For 4.1 and 4.2.2
         if self.SACK != 1:
             for k in self.buffer.keys():
                 payload_len = len(self.buffer[k])
                 header_GBN = GBN(type=0, options = 0, len = payload_len, hlen=6, num=k, win=self.win)
                 send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
         
+        #For 4.3.2
         if self.SACK == 1:
             for k in self.buffer.keys():
                 payload_len = len(self.buffer[k])
