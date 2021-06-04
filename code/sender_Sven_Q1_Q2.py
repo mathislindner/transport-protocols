@@ -184,7 +184,7 @@ class GBNSender(Automaton):
                         send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[ack])
                         # add to self.buffer bc we just resent?
                         self.acks_received[ack] = 0
-                else:
+                elif ack <= self.win + self.unack:
                     self.acks_received[ack] = 1
 
             while self.unack != ack:
