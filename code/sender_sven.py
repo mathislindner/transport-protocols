@@ -225,6 +225,7 @@ class GBNSender(Automaton):
                     #[leftedge1,length1,leftedge2,length2,,]
                     SACK_information_list = self.extract_SACK(pkt)
                     log.debug(SACK_information_list)
+                    log.debug("ACK in SACK: %s", ack)
                     holes = pkt.getlayer(GBN).block_number
                     not_received = ack 
                     missing_ACK = []
