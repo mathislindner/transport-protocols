@@ -220,7 +220,6 @@ class GBNSender(Automaton):
                     self.buffer.pop(self.unack)
                     self.unack = (self.unack + 1) % 2**self.n_bits
 
-
             if self.SACK == 1:
                 if pkt.getlayer(GBN).hlen > 6:
                     #[leftedge1,length1,leftedge2,length2,,]
@@ -235,8 +234,8 @@ class GBNSender(Automaton):
 
                     for packet_number in missing_ACK:
                         if len(self.buffer.keys()) != 0:
-                            if payload in self.buffer.keys():
-                                payload = self.buffer[packet_number]
+                            payload = self.buffer[packet_number]
+                            if payload in self.buffer.keys(): 
                                 header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = packet_number, win = self.win)
                                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
 
