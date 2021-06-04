@@ -234,8 +234,8 @@ class GBNSender(Automaton):
 
                     for packet_number in missing_ACK:
                         if len(self.buffer.keys()) != 0:
-                            payload = self.buffer[packet_number]
-                            if payload in self.buffer.keys(): 
+                            if packet_number in self.buffer.keys():
+                                payload = self.buffer[packet_number]
                                 header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = packet_number, win = self.win)
                                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
 
