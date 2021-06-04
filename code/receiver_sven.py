@@ -299,6 +299,7 @@ class GBNReceiver(Automaton):
                                      win=self.win)
 
                 log.debug("Sending ACK: %s", self.next)
+                log.debug("sending this header: %s", header_GBN)
                 send(IP(src=self.receiver, dst=self.sender) / header_GBN,
                      verbose=0)
 
