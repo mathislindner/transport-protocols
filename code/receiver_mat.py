@@ -118,14 +118,14 @@ class GBNReceiver(Automaton):
         block_number = int(len(block_list)/2)
         log.debug('block_number is: ')
         log.debug(block_number)
-        if block_number < 1:
+        if block_number == 0:
             header_GBN = GBN(type="ack",
                                 options=1,
                                 len=0,
                                 hlen=6,
                                 num=self.next,
                                 win=self.win)
-        elif block_number < 2:
+        elif block_number == 1:
             header_GBN = GBN(type="ack",
                                 options=1,
                                 len=0,
@@ -135,7 +135,7 @@ class GBNReceiver(Automaton):
                                 block_number = block_number,
                                 left_edge_1 = block_list[0],
                                 length_1 = block_list[1])
-        elif block_number < 3:
+        elif block_number == 2:
             header_GBN = GBN(type="ack",
                                 options=1,
                                 len=0,
@@ -256,12 +256,7 @@ class GBNReceiver(Automaton):
                     buffer_keys.sort()
                     ####################################somehow apply the window to the keys
                     log.debug('which ack are in buffer: '+ str(buffer_keys))
-                    log.debug('recevied all packets successfully until: ' + str(self.next))
-                    """
-                    highest_key_number = 0
-                    if len(buffer_keys) > 0:
-                        highest_key_number = max(buffer_keys) #highest key number should be self.next + win and %after
-                    """
+
                     current_block = 0
                     i = self.next
                     highest_key_number = self.next + self.win
@@ -271,10 +266,10 @@ class GBNReceiver(Automaton):
                             break
                         counter = 1 #how many packets are after the first
                         left_received = i #saving to remmeber first value in buffer
-                        if i%32 in buffer_keys: 
+                        if i%2**self.n_bits in buffer_keys: 
                             new_block = True #we ll need to say what we ve recevied
                             i = i + 1 
-                            while (i%32 in buffer_keys):
+                            while (i%2**self.n_bits in buffer_keys):
                                 counter +=1
                                 i = i + 1 
                         if new_block:
@@ -299,7 +294,7 @@ class GBNReceiver(Automaton):
             # the ACK will be received correctly
             else:
 
-                if pkt.getlayer(GBN).options == False:
+                if pkt.getlayer(GBN).options == True:
                     log.debug('creating header for SACK')
                     header_GBN = self.fill_SACK_header_from_list()
 
@@ -311,7 +306,7 @@ class GBNReceiver(Automaton):
                                      num=self.next,
                                      win=self.win)
 
-                log.debug("Sending ACK: %s", self.next)
+                log.debug("Sending ACK: %s", header_GBN)
                 send(IP(src=self.receiver, dst=self.sender) / header_GBN,
                      verbose=0)
 
@@ -319,12 +314,7 @@ class GBNReceiver(Automaton):
                 # --> close receiver
                 if self.end_receiver and self.end_num == self.next:
                     log.debug("ending")
-                    ###########################################################################################
-
-                    #raise self.END()
-
-
-                    ###########################################################################################
+                    raise self.END()
             # transition to WAIT_SEGMENT to receive next segment
             raise self.WAIT_SEGMENT()
 
