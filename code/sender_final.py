@@ -220,7 +220,7 @@ class GBNSender(Automaton):
             # counting the incoming acks
             # if an ACK arrives more than three times, the corresponding packet will be resent 
             if self.Q_4_2 == 1:
-                if ack self.buffer.keys():
+                if ack in self.buffer.keys():
                     if ack in self.acks_received:
                         self.acks_received[ack] += 1
                         if self.acks_received[ack] > 2:
