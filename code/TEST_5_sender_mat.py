@@ -145,7 +145,6 @@ class GBNSender(Automaton):
 
                 # add the current segment to the buffer
                 self.buffer[self.current] = payload
-                #log.debug("Current buffer size test: %s", len(self.buffer))
 
                 ###############################################################
                 # TODO:                                                       #
@@ -206,7 +205,6 @@ class GBNSender(Automaton):
             # make sure that you can handle a sequence number overflow     #
             ################################################################
 
-            
             if self.Q_4_2:
                 if ack in self.acks_received:
                     self.acks_received[ack]  += 1
@@ -217,7 +215,7 @@ class GBNSender(Automaton):
                         self.acks_received[ack] = 0
                 else:
                     self.acks_received[ack] = 1
-
+            
             elif self.SACK == 1:
                 #extract the SACK information back to a []
                 #check buffer to see non ACKed
@@ -231,14 +229,14 @@ class GBNSender(Automaton):
                     blocks = 0
                 for i in range(blocks):
                     for j in range(first_unacked,SACK_information_list[2*i]):
-                        missing_ACK.append(j%32)
+                        if j < (self.current + self.win):
+                            missing_ACK.append(j%32)
                     first_unacked = SACK_information_list[2*i] + SACK_information_list[2*i+1]
 
                 for packet_number in missing_ACK:
                     payload = self.buffer[packet_number]
                     header_GBN = GBN(options = 1,type = 0, len=len(payload), hlen = 6, num = packet_number, win = self.win)
                     send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
-            #else?
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
