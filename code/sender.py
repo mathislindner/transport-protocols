@@ -212,7 +212,10 @@ class GBNSender(Automaton):
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
-                    self.acks_received.pop(self.unack) #for Q_4_2
+                    try:
+                        self.acks_received.pop(self.unack) #for Q_4_2
+                    except:
+                        pass
                     self.unack = (self.unack + 1) % 2**self.n_bits
 
             # Selective Acknowledgment:

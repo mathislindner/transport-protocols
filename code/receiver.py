@@ -289,7 +289,7 @@ class GBNReceiver(Automaton):
                                 block_list_for_header.append(counter)
                                 current_block += 1
                                 new_block = False
-                    header_GBN = self.fill_SACK_header_from_list(block_list_for_header) 
+                    header_GBN = self.fill_SACK_header_from_list(block_list_for_header)
 
                 else:
                     header_GBN = GBN(type="ack",
@@ -358,4 +358,3 @@ if __name__ == "__main__":
                                args.ack_l, size)
     # start automaton
     GBN_receiver.run()
-    
