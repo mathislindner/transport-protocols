@@ -226,13 +226,11 @@ class GBNSender(Automaton):
                 if ack in self.buffer.keys():
                     if ack in self.acks_received:
                         self.acks_received[ack] += 1
-                        if self.acks_received[ack] > 2:
-                            
+                        if self.acks_received[ack] > 2:              
                             header_GBN = GBN(type=0, options = 0, len=len(self.buffer[ack]), hlen=6, num=ack, win=self.win)
                             send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[ack])
                             # add to self.buffer bc we just resent?
-                            #self.acks_received[ack] = 0
-                            self.buffer.pop(self.unack)
+                            self.acks_received[ack] = 0
                     else :
                         self.acks_received[ack] = 1
 
