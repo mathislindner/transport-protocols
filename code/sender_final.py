@@ -214,9 +214,11 @@ class GBNSender(Automaton):
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
+                    self.acks_received.pop(self.unack) #for Q_4_2
                     self.unack = (self.unack + 1) % 2**self.n_bits
 
-            # Selective Acknowledgment: 
+            # Selective Acknowledgment:
+            # only using the ACKs that are curretly in our buffer and therefore in our window 
             # counting the incoming acks
             # if an ACK arrives more than three times, the corresponding packet will be resent 
             if self.Q_4_2 == 1:
