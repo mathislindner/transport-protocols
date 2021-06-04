@@ -234,7 +234,7 @@ class GBNSender(Automaton):
                             log.debug("Missing ptk: %s", not_received)
                             missing_ACK.append(not_received)
                             not_received = (not_received + 1) % 2**self.n_bits
-                        not_received = (not_received + SACK_information_list[2*i])% 2**self.n_bits
+                        not_received = (not_received + SACK_information_list[2*i+1])% 2**self.n_bits
                         log.debug("not received: %s", not_received)
 
                     for packet_number in missing_ACK:
