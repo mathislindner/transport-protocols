@@ -209,7 +209,8 @@ class GBNSender(Automaton):
             # make sure that you can handle a sequence number overflow     #
             ################################################################
 
-            # cumulative acknowledgement         
+            # Cumulative Acknowledgement:
+            # delting all packtes out of the buffer until the ack          
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
@@ -219,16 +220,16 @@ class GBNSender(Automaton):
             # counting the incoming acks
             # if an ACK arrives more than three times, the corresponding packet will be resent 
             if self.Q_4_2 == 1:
-                if ack in self.acks_received:
-                    self.acks_received[ack] += 1
-                    if self.acks_received[ack] > 2:
-                        header_GBN = GBN(type=0, options = 0, len=len(self.buffer[ack]), hlen=6, num=ack, win=self.win)
-                        send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[ack])
-                        # add to self.buffer bc we just resent?
-                        self.acks_received[ack] = 0
-                else :
-                    self.acks_received[ack] = 1
-                #elif ack <= (self.win + self.unack) % 2**self.n_bits:
+                if ack self.buffer.keys():
+                    if ack in self.acks_received:
+                        self.acks_received[ack] += 1
+                        if self.acks_received[ack] > 2:
+                            header_GBN = GBN(type=0, options = 0, len=len(self.buffer[ack]), hlen=6, num=ack, win=self.win)
+                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[ack])
+                            # add to self.buffer bc we just resent?
+                            self.acks_received[ack] = 0
+                    else :
+                        self.acks_received[ack] = 1
 
             # SACK: 
             # if an ACK has an optional header, we select the packets that were lost on the way
