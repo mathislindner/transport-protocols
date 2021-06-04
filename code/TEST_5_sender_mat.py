@@ -227,7 +227,7 @@ class GBNSender(Automaton):
                 blocks = pkt.getlayer(GBN).block_number
                 if blocks is None:
                     blocks = 0
-                for i in range(blocks):
+               for i in range(blocks):
                     for j in range(first_unacked,SACK_information_list[2*i]):
                         if j < (self.current + self.win):
                             missing_ACK.append(j%2**self.n_bits)
