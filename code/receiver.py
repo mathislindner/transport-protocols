@@ -107,16 +107,14 @@ class GBNReceiver(Automaton):
         self.end_receiver = False
         self.end_num = -1
         self.buffer = {}
-        self.block_list_for_header = []
-        self.correctly_received = []
         
-    def fill_SACK_header_from_list(self):
+    def fill_SACK_header_from_list(self,block_list_for_header):
         """Function to create SACK headers from a given list should look like the matrix from the assignement but reshaped and without the padding
         input: list for SACK
         input: list for SACK
         returns: a header with SACK 
         """
-        block_list = self.block_list_for_header #to not work with the object directly
+        block_list = block_list_for_header #to not work with the object directly
         block_number = int(len(block_list)/2)
         if block_number < 1:
             header_GBN = GBN(type="ack",
@@ -250,8 +248,22 @@ class GBNReceiver(Automaton):
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
 
+
+            else:
+                # we received an ACK while we are supposed to receive only
+                # data segments
+                log.error("ERROR: Received ACK segment: %s", pkt.show())
+                raise self.WAIT_SEGMENT()
+
+            # send ACK back to sender
+            if random.random() < self.p_ack:
+                # the ACK will be lost, discard it
+                log.debug("Lost ACK: %s", self.next)
+
+            # the ACK will be received correctly
+            else:
                 if sack_support == 1:
-                    self.block_list_for_header = [] #basically table but in an array
+                    block_list_for_header = [] #basically table of the assignment but in an array
                     buffer_keys = list(self.buffer.keys())
                     current_block = 0
                     new_block = False
@@ -273,26 +285,11 @@ class GBNReceiver(Automaton):
                                 pointer = (pointer + 1) % 2**self.n_bits
                             #then append our newly created header information
                             if new_block:
-                                self.block_list_for_header.append(left_received)
-                                self.block_list_for_header.append(counter)
+                                block_list_for_header.append(left_received)
+                                block_list_for_header.append(counter)
                                 current_block += 1
                                 new_block = False
-
-            else:
-                # we received an ACK while we are supposed to receive only
-                # data segments
-                log.error("ERROR: Received ACK segment: %s", pkt.show())
-                raise self.WAIT_SEGMENT()
-
-            # send ACK back to sender
-            if random.random() < self.p_ack:
-                # the ACK will be lost, discard it
-                log.debug("Lost ACK: %s", self.next)
-
-            # the ACK will be received correctly
-            else:
-                if sack_support == 1:
-                    header_GBN = self.fill_SACK_header_from_list()
+                    header_GBN = self.fill_SACK_header_from_list(block_list_for_header)
 
                 else:
                     header_GBN = GBN(type="ack",
