@@ -116,6 +116,8 @@ class GBNReceiver(Automaton):
         """
         block_list = self.block_list_for_header #to not work with the object directly
         block_number = int(len(block_list)/2)
+        log.debug('block_number is: ')
+        log.debug(block_number)
         if block_number < 1:
             header_GBN = GBN(type="ack",
                                 options=1,
@@ -198,7 +200,6 @@ class GBNReceiver(Automaton):
         """State for incoming data."""
         num = pkt.getlayer(GBN).num
         payload = bytes(pkt.getlayer(GBN).payload)
-        sack_support = pkt.getlayer(GBN).options
 
         # received segment was lost/corrupted in the network
         if random.random() < self.p_data:
@@ -249,7 +250,7 @@ class GBNReceiver(Automaton):
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
 
-                if(pkt.getlayer(GBN).options == 1):
+                if(pkt.getlayer(GBN).options == True):
                     self.block_list_for_header = [] #basically table but in an array
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
@@ -297,7 +298,8 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
-                if pkt.getlayer(GBN).options == 1:
+
+                if pkt.getlayer(GBN).options == False:
                     log.debug('creating header for SACK')
                     header_GBN = self.fill_SACK_header_from_list()
 
