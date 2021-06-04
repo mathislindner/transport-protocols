@@ -212,7 +212,7 @@ class GBNSender(Automaton):
                         send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[ack])
                         # add to self.buffer bc we just resent?
                         self.acks_received[ack] = 0
-                elif ack <= self.win + self.unack:
+                elif ack <= (self.win + self.unack) % 2**self.n_bits:
                     self.acks_received[ack] = 1
             
             while self.unack != ack:
@@ -234,9 +234,10 @@ class GBNSender(Automaton):
                         first_unacked = (SACK_information_list[2*i] + SACK_information_list[2*i+1]) % 2**self.n_bits
 
                     for packet_number in missing_ACK:
-                        payload = self.buffer[packet_number]
-                        header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = packet_number, win = self.win)
-                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
+                        if payload in self.buffer.keys():
+                            payload = self.buffer[packet_number]
+                            header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = packet_number, win = self.win)
+                            send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
 
             '''
             if self.SACK == 1:
