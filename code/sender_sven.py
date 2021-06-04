@@ -243,38 +243,6 @@ class GBNSender(Automaton):
                                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
                                 log.debug("Sending packet num: %s", packet_number)
 
-            '''
-            if self.SACK == 1:
-                block_length = pkt.getlayer(GBN).block_number
-                pointer = self.unack
-                if block_length > 0:
-                    pointer_1 = self.unack
-                    for i in self.win:
-                        if pointer_1 + i in self.buffer.keys():
-                            header_GBN = GBN(type=0, len=len(self.buffer[pointer_1+i]), hlen=6, num=pointer_1+i, win=self.win)
-                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[pointer_1+i])
-                            if pointer_1 + i == pkt.getlayer(GBN).left_edge_1:
-                                break
-
-                if block_length > 1:
-                    pointer_2 = pkt.getlayer(GBN).left_edge_1 + pkt.getlayer(GBN).length_1
-                    for i in self.buffer:
-                        if pointer_2 + i in self.buffer.keys():
-                            header_GBN = GBN(type=0, len=len(self.buffer[pointer_2+i]), hlen=6, num=pointer_2+i, win=self.win)
-                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[pointer_2+i]
-                            if (pointer_2 + i) == pkt.getlayer(GBN).left_edge_2:
-                                break
-
-                if block_length > 2:
-                    pointer_3 = pkt.getlayer(GBN).left_edge_2 + pkt.getlayer(GBN).length_2
-                    for i in self.buffer:
-                        if pointer_3 + i in self.buffer.keys():
-                            header_GBN = GBN(type=0, len=len(self.buffer[pointer_3+i]), hlen=6, num=pointer_3+i, win=self.win)
-                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[pointer_3+i]
-                            if pointer_3 + i == pkt.getlayer(GBN).left_edge_3:
-                                break
-                '''
-
         # back to SEND state
         raise self.SEND()
 
