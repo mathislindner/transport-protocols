@@ -107,6 +107,21 @@ class GBNSender(Automaton):
         return (IP in pkt and pkt[IP].src == self.receiver and GBN in pkt
                 and ICMP not in pkt)
 
+    def extract_SACK(self,pkt):
+        SACK_information = []
+        header_length = pkt.getlayer(GBN).hlen
+        if header_length > 6:
+            SACK_information.append(pkt.getlayer(GBN).left_edge_1)
+            SACK_information.append(pkt.getlayer(GBN).length_1)
+        if header_length > 9:
+            SACK_information.append(pkt.getlayer(GBN).left_edge_2)
+            SACK_information.append(pkt.getlayer(GBN).length_2)
+        if header_length > 12:
+            SACK_information.append(pkt.getlayer(GBN).left_edge_3)
+            SACK_information.append(pkt.getlayer(GBN).length_3)
+
+        return SACK_information
+
     @ATMT.state(initial=1)
     def BEGIN(self):
         """Start state of the automaton."""
@@ -204,7 +219,25 @@ class GBNSender(Automaton):
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
                     self.unack = (self.unack + 1) % 2**self.n_bits
-            
+
+
+            if self.SACK == 1:
+                if pkt.getlayer(GBN).hlen > 6:
+                    #[leftedge1,length1,leftedge2,length2,,]
+                    SACK_information_list = self.extract_SACK(pkt)
+                    blocks = pkt.getlayer(GBN).block_number
+                    first_unacked = self.unack
+                    missing_ACK = []
+                    for i in range(blocks):
+                        for j in range(SACK_information_list[2*i]):
+                            missing_ACK.append((first_unacked + j) % 2**self.n_bits)
+                        first_unacked = (SACK_information_list[2*i] + SACK_information_list[2*i+1]) % 2**self.n_bits
+
+                    for packet_number in missing_ACK:
+                        payload = self.buffer[packet_number]
+                        header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = packet_number, win = self.win)
+                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
+
             '''
             if self.SACK == 1:
                 block_length = pkt.getlayer(GBN).block_number
