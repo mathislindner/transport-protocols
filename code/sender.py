@@ -108,6 +108,7 @@ class GBNSender(Automaton):
                 and ICMP not in pkt)
 
     def extract_SACK(self,pkt):
+        """Extractin the Information of the optional header."""
         SACK_information = []
         header_length = pkt.getlayer(GBN).hlen
         if header_length > 6:
@@ -156,13 +157,18 @@ class GBNSender(Automaton):
                 # send a packet to the receiver containing the created header #
                 # and the corresponding payload                               #
                 ###############################################################
-                if self.SACK != 1:
-                    header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
-                if self.SACK == 1:
-                    header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
+                # window controll: Just send something if there is still space in the window 
+                if len(self.buffer) <= self.win:
+                    # For 4.1 and 4.2.2
+                    if self.SACK != 1:
+                        header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
+
+                    # For 4.3.2
+                    if self.SACK == 1:
+                        header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
 
                 # sequence number of next packet
                 self.current = int((self.current + 1) % 2**self.n_bits)
@@ -203,39 +209,44 @@ class GBNSender(Automaton):
             # make sure that you can handle a sequence number overflow     #
             ################################################################
 
-            if self.Q_4_2 == 1:
-                if ack in self.acks_received:
-                    self.acks_received[ack] += 1
-                    if self.acks_received[ack] > 2:
-                        header_GBN = GBN(type=0, options = 0, len=len(self.buffer[ack]), hlen=6, num=ack, win=self.win)
-                        send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[ack])
-                        # add to self.buffer bc we just resent?
-                        self.acks_received[ack] = 0
-                else :
-                    self.acks_received[ack] = 1
-                #elif ack <= (self.win + self.unack) % 2**self.n_bits:
-                    
+            # Cumulative Acknowledgement:
+            # delting all packtes out of the buffer until the ack          
             while self.unack != ack:
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
+                    self.acks_received.pop(self.unack) #for Q_4_2
                     self.unack = (self.unack + 1) % 2**self.n_bits
 
+            # Selective Acknowledgment:
+            # only using the ACKs that are curretly in our buffer and therefore in our window 
+            # counting the incoming acks
+            # if an ACK arrives more than three times, the corresponding packet will be resent 
+            if self.Q_4_2 == 1:
+                if ack in self.buffer.keys():
+                    if ack in self.acks_received:
+                        self.acks_received[ack] += 1
+                        if self.acks_received[ack] > 2:
+                            header_GBN = GBN(type=0, options = 0, len=len(self.buffer[ack]), hlen=6, num=ack, win=self.win)
+                            send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[ack])
+                            # add to self.buffer bc we just resent?
+                            self.acks_received[ack] = 0
+                    else :
+                        self.acks_received[ack] = 1
+
+            # SACK: 
+            # if an ACK has an optional header, we select the packets that were lost on the way
+            # sending the lost packets back
             if self.SACK == 1:
                 if pkt.getlayer(GBN).hlen > 6:
-                    #[leftedge1,length1,leftedge2,length2,,]
                     SACK_information_list = self.extract_SACK(pkt)
-                    log.debug(SACK_information_list)
-                    log.debug("ACK in SACK: %s", ack)
                     holes = pkt.getlayer(GBN).block_number
                     not_received = ack 
                     missing_ACK = []
                     for i in range(holes):
                         while not_received != SACK_information_list[2*i]:
-                            log.debug("Missing ptk: %s", not_received)
                             missing_ACK.append(not_received)
                             not_received = (not_received + 1) % 2**self.n_bits
                         not_received = (not_received + SACK_information_list[2*i+1])% 2**self.n_bits
-                        log.debug("not received: %s", not_received)
 
                     for packet_number in missing_ACK:
                         if len(self.buffer.keys()) != 0:
@@ -243,7 +254,6 @@ class GBNSender(Automaton):
                                 payload = self.buffer[packet_number]
                                 header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = packet_number, win = self.win)
                                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
-                                log.debug("Sending packet num: %s", packet_number)
 
         # back to SEND state
         raise self.SEND()
@@ -263,12 +273,17 @@ class GBNSender(Automaton):
         # retransmit all the unacknowledged packets  #
         # (all the packets currently in self.buffer) #
         ##############################################
+
+        # Retransmitting the full buffer in case of a time out
+        
+        #F or 4.1 and 4.2.2
         if self.SACK != 1:
             for k in self.buffer.keys():
                 payload_len = len(self.buffer[k])
                 header_GBN = GBN(type=0, options = 0, len = payload_len, hlen=6, num=k, win=self.win)
                 send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
         
+        # For 4.3.2
         if self.SACK == 1:
             for k in self.buffer.keys():
                 payload_len = len(self.buffer[k])
