@@ -230,7 +230,7 @@ class GBNSender(Automaton):
                 for i in range(blocks):
                     for j in range(first_unacked,SACK_information_list[2*i]):
                         if j < (self.current + self.win):
-                            missing_ACK.append(j%32)
+                            missing_ACK.append(j%2**self.n_bits)
                     first_unacked = SACK_information_list[2*i] + SACK_information_list[2*i+1]
 
                 for packet_number in missing_ACK:

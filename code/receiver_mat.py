@@ -249,7 +249,7 @@ class GBNReceiver(Automaton):
                     log.debug("Out of sequence segment [num = %s] received. "
                               "Expected %s", num, self.next)
 
-                if(sack_support == 1):
+                if(pkt.getlayer(GBN).options == 1):
                     self.block_list_for_header = [] #basically table but in an array
                     buffer_keys = list(self.buffer.keys())
                     buffer_keys.sort()
@@ -297,7 +297,8 @@ class GBNReceiver(Automaton):
 
             # the ACK will be received correctly
             else:
-                if sack_support == 1:
+                if pkt.getlayer(GBN).options == 1:
+                    log.debug('creating header for SACK')
                     header_GBN = self.fill_SACK_header_from_list()
 
                 else:
