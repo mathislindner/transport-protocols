@@ -141,10 +141,13 @@ class GBNSender(Automaton):
                 # send a packet to the receiver containing the created header #
                 # and the corresponding payload                               #
                 ###############################################################
+                if self.Q_4_3 != 1:
+                    header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
-                header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
-
+                if self.Q_4_3 == 1:
+                    header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
 
                 # sequence number of next packet
                 self.current = int((self.current + 1) % 2**self.n_bits)
