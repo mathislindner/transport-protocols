@@ -142,7 +142,7 @@ class GBNSender(Automaton):
                 # and the corresponding payload                               #
                 ###############################################################
 
-                header_GBN = GBN(type = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
 
@@ -201,7 +201,7 @@ class GBNSender(Automaton):
                 if self.unack in self.buffer:
                     self.buffer.pop(self.unack)
                     self.unack = (self.unack + 1) % 2**self.n_bits
-
+            '''
             if self.SACK == 1:
                 block_length = pkt.getlayer(GBN).block_number
                 pointer = self.unack
@@ -231,7 +231,7 @@ class GBNSender(Automaton):
                             send(IP(src=self.sender, dst=self.receiver) / header_GBN / self.buffer[pointer_3+i]
                             if pointer_3 + i == pkt.getlayer(GBN).left_edge_3:
                                 break
-
+                '''
         # back to SEND state
         raise self.SEND()
 
