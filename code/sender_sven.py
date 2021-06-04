@@ -229,6 +229,7 @@ class GBNSender(Automaton):
                     missing_ACK = []
                     for i in range(blocks):
                         for j in range(SACK_information_list[2*i]):
+                            log.debug("Missing ptk: %s", first_unacked + j)
                             missing_ACK.append((first_unacked + j) % 2**self.n_bits)
                         first_unacked = (SACK_information_list[2*i] + SACK_information_list[2*i+1]) % 2**self.n_bits
 
