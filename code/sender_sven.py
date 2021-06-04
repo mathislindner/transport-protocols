@@ -225,7 +225,7 @@ class GBNSender(Automaton):
                     #[leftedge1,length1,leftedge2,length2,,]
                     SACK_information_list = self.extract_SACK(pkt)
                     blocks = pkt.getlayer(GBN).block_number
-                    first_unacked = self.unack
+                    first_unacked = self.unack + 1 
                     missing_ACK = []
                     for i in range(blocks):
                         for j in range(SACK_information_list[2*i]):
