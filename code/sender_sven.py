@@ -255,11 +255,18 @@ class GBNSender(Automaton):
         # retransmit all the unacknowledged packets  #
         # (all the packets currently in self.buffer) #
         ##############################################
+        if self.SACK != 1:
+            for k in self.buffer.keys():
+                payload_len = len(self.buffer[k])
+                header_GBN = GBN(type=0, options = 0, len = payload_len, hlen=6, num=k, win=self.win)
+                send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
+        
+        if self.SACK == 1:
+            for k in self.buffer.keys():
+                payload_len = len(self.buffer[k])
+                header_GBN = GBN(type=0, options = 1, len = payload_len, hlen=6, num=k, win=self.win)
+                send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
 
-        for k in self.buffer.keys():
-            payload_len = len(self.buffer[k])
-            header_GBN = GBN(type=0, options = 0,len = payload_len, hlen=6, num=k, win=self.win)
-            send(IP(src = self.sender, dst = self.receiver)/header_GBN/self.buffer[k])
 
 
         # back to SEND state
