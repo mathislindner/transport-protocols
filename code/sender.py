@@ -158,17 +158,15 @@ class GBNSender(Automaton):
                 # and the corresponding payload                               #
                 ###############################################################
 
-                # window controll: Just send something if there is still space in the window 
-                if len(self.buffer) <= self.win:
-                    # For 4.1 and 4.2.2
-                    if self.SACK != 1:
-                        header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
+                # For 4.1 and 4.2.2
+                if self.SACK != 1:
+                    header_GBN = GBN(type = 0, options = 0, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])
 
-                    # For 4.3.2
-                    if self.SACK == 1:
-                        header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
-                        send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
+                # For 4.3.2
+                if self.SACK == 1:
+                    header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = self.current, win = self.win)
+                    send(IP(src=self.sender, dst=self.receiver)/header_GBN/self.buffer[self.current])                    
 
                 # sequence number of next packet
                 self.current = int((self.current + 1) % 2**self.n_bits)
@@ -177,7 +175,7 @@ class GBNSender(Automaton):
                 # (send next packet if possible)
                 raise self.SEND()
 
-            # no more payload pieces in the queue --> if all are acknowledged,
+            # no more payload pieces in the queue --> if all are acknowledged
             # we can end the sender
             except que.Empty:
                 if self.unack == self.current:
