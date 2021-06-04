@@ -238,6 +238,7 @@ class GBNSender(Automaton):
                                 payload = self.buffer[packet_number]
                                 header_GBN = GBN(type = 0, options = 1, len=len(payload), hlen = 6, num = packet_number, win = self.win)
                                 send(IP(src=self.sender, dst=self.receiver)/header_GBN/payload)
+                                log.debug("Sending packet num: %s", packet_number)
 
             '''
             if self.SACK == 1:
